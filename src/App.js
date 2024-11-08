@@ -1,23 +1,25 @@
-import logo from './logo.svg';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import './App.css';
+import WelcomePage from './Pages/WelcomePage/WelcomePage';
+import Login from './Components/Login/Login';
+import CoordinatorFormTable from './Pages/CoordinatorFormTable/CoordinatorFormTable';
+import UserList from './Pages/UserList/UserList';
+
+// import Dummy from './Pages/dummy/Dummy';
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <Router>
+        <Routes>
+          <Route path="/" element={<WelcomePage />} />
+          {/* <Route path="/admin" element={<CoordinatorFormTable />} /> */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/coordinator" element={<CoordinatorFormTable />} />
+          <Route path="/user-list" element={<UserList />} />
+          {/* <Route path="/pages" element={<Dummy />} /> */}
+        </Routes>
+      </Router>
     </div>
   );
 }

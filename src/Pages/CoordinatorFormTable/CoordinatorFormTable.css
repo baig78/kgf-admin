@@ -1,0 +1,129 @@
+.coordinator-form-table {
+  padding: 40px 65px;
+}
+
+.title {
+  font-weight: 700;
+  margin-left: 80px;
+  margin-top: 30px;
+}
+
+@media screen and (max-width: 768px) {
+  .coordinator-form-table {
+    padding: 20px;
+  }
+
+  /* Table styling for mobile */
+  table {
+    font-size: 12px;
+  }
+
+  table th,
+  table td {
+    padding: 8px 10px;
+  }
+
+  /* Form styling for mobile */
+  .form-group-row {
+    flex-direction: column; /* Stack form fields vertically on small screens */
+    gap: 15px;
+  }
+
+  .form-group {
+    flex: 1;
+    max-width: 100%; /* Allow full width on mobile */
+  }
+
+  .add-btn {
+    width: 100%;
+    margin-top: 20px;
+  }
+}
+
+/* Table styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table th,
+table td {
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+table th {
+  background-color: #f4f4f4;
+}
+
+/* Form styling */
+.form-group-row {
+  display: flex;
+  flex-wrap: wrap; /* Allow input fields to wrap into the next line if needed */
+  gap: 20px; /* Maintain space between input fields */
+}
+
+.form-group {
+  flex: 1;
+  margin-bottom: 0px;
+  padding: 10px;
+  max-width: 30%; /* Limit the width of each input field to fit three in a row */
+}
+
+/* Label styling */
+.form-group label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+/* Input fields styling */
+.form-group input {
+  width: 100%;
+
+  font-size: 14px;
+
+  border-radius: 4px;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+}
+
+/* Button styling */
+.add-btn {
+  width: 200px;
+  padding: 12px;
+  background-color: #006ae8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 30px;
+  margin-bottom: 30px;
+  float: right;
+  right: 42px;
+}
+
+.add-btn:hover {
+  background-color: #0056b3;
+}
+
+.coordinator-form-table .coordinator-form {
+  border: 1px solid #c2c2c2;
+  padding: 0 30px 60px 30px;
+}
+
+.coordinator-form-table .coordinator-table {
+  margin-top: 35px;
+}
+
+.css-1abvrni-MuiButtonBase-root-MuiButton-root {
+  text-transform: capitalize !important;
+}
+
+.css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input {
+  height: 48px !important;
+}

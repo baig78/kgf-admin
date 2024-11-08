@@ -1,0 +1,80 @@
+/* Navbar.css */
+
+/* Navbar basic styles */
+.navbar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 60px;
+  background-color: #006ae8; /* Light background color */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 9;
+}
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  color: white;
+  font-weight: 600;
+  font-size: 20px;
+}
+
+.navbar-logo .logo {
+  width: 50px; /* Adjust the logo size */
+  height: auto;
+}
+
+.navbar-menu {
+  display: flex;
+  gap: 20px;
+}
+
+.navbar-menu a {
+  text-decoration: none;
+  color: #fff; /* Dark text color */
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.navbar-menu a:hover {
+  color: #333; /* Change color on hover */
+}
+
+/* Hamburger icon for mobile */
+.navbar-hamburger {
+  display: none;
+  flex-direction: column;
+  cursor: pointer;
+  gap: 4px;
+}
+
+.navbar-hamburger .line {
+  width: 30px;
+  height: 4px;
+  background-color: #333;
+}
+
+/* Make the menu responsive */
+@media (max-width: 768px) {
+  .navbar-menu {
+    position: absolute;
+    top: 60px;
+    right: 20px;
+    background-color: #f8f9fa;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+    display: none; /* Hidden by default */
+  }
+
+  .navbar-menu.open {
+    display: flex; /* Display menu when open */
+  }
+
+  .navbar-hamburger {
+    display: flex; /* Show hamburger icon */
+  }
+}

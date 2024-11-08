@@ -1,0 +1,75 @@
+/* Container styling */
+.welcome-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Image styling */
+.welcome-image img {
+  width: 200px;
+  max-width: 400px;
+  border-radius: 8px;
+}
+
+/* Content styling */
+.welcome-content {
+  margin-top: 20px;
+}
+
+.welcome-content h1 {
+  font-size: 1.8em;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.welcome-content .sign-in-button {
+  padding: 10px 20px;
+  font-size: 1em;
+  color: #fff;
+  background-color: #006ae8;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 20px;
+  padding: 10px 20px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.welcome-content .sign-in-button:hover {
+  background-color: #005bb5;
+}
+
+/* Responsive styling */
+@media (min-width: 768px) {
+  /* .welcome-container {
+      flex-direction: column;
+      justify-content: space-around;
+      padding: 40px;
+    } */
+
+  .welcome-content h1 {
+    font-size: 2.5em;
+  }
+}
+
+/* Style for centering */
+.welcome-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh; /* Full viewport height */
+  text-align: center;
+}
+
+.welcome-image img {
+  max-width: 100%; /* Ensures image scales well */
+  height: auto;
+}
+
+/* Optional styling for button */
