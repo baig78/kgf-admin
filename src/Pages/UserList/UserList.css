@@ -8,8 +8,12 @@
   margin-top: 30px;
 }
 
-.center-align {
+.vertical-center {
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
 }
+
+/* .user-list .css-1t66o0l-MuiPaper-root {
+  height: 70vh;
+} */

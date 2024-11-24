@@ -1,30 +1,31 @@
 /* Navbar.css */
 
-/* Navbar basic styles */
 .navbar {
-  position: sticky;
-  top: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 60px;
-  background-color: #006ae8; /* Light background color */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  z-index: 9;
+  padding: 10px 20px;
+  background-color: #006ae8; /* Dark background */
+  color: #ffffff; /* White text */
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .navbar-logo {
   display: flex;
   align-items: center;
-  gap: 20px;
-  color: white;
-  font-weight: 600;
   font-size: 20px;
+  font-weight: bold;
+  color: #ffffff;
 }
 
 .navbar-logo .logo {
-  width: 50px; /* Adjust the logo size */
-  height: auto;
+  width: 40px;
+  height: 40px;
+  margin-right: 10px;
+  border-radius: 50%;
 }
 
 .navbar-menu {
@@ -33,48 +34,134 @@
 }
 
 .navbar-menu a {
+  color: #ffffff;
   text-decoration: none;
-  color: #fff; /* Dark text color */
   font-size: 16px;
-  font-weight: 600;
+  transition: color 0.3s ease;
 }
 
 .navbar-menu a:hover {
-  color: #333; /* Change color on hover */
+  color: #7aadca; /* Highlight color */
 }
 
-/* Hamburger icon for mobile */
 .navbar-hamburger {
   display: none;
   flex-direction: column;
   cursor: pointer;
-  gap: 4px;
+  gap: 5px;
 }
 
 .navbar-hamburger .line {
-  width: 30px;
-  height: 4px;
-  background-color: #333;
+  width: 25px;
+  height: 3px;
+  background-color: #ffffff;
+  transition: all 0.3s ease;
 }
 
-/* Make the menu responsive */
+.user-dropdown {
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.user-icon {
+  font-size: 24px;
+  color: #ffffff;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  background-color: #006ae8;
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-item {
+  padding: 10px 20px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.dropdown-item:hover {
+  background-color: #4c9dff;
+}
+
+.logout {
+  color: #ff4d4d;
+}
+
+.logout-icon {
+  font-size: 20px;
+}
+
+.navbar-menu .active {
+  /* color: #111;  */
+  /* text-decoration: underline; */
+  font-weight: 600;
+}
+
+/* Responsive Styles */
 @media (max-width: 768px) {
   .navbar-menu {
+    flex-direction: column;
+    display: none;
     position: absolute;
     top: 60px;
-    right: 20px;
-    background-color: #f8f9fa;
-    flex-direction: column;
-    gap: 10px;
-    padding: 20px;
-    display: none; /* Hidden by default */
+    right: 0;
+    background-color: #201e1f;
+    width: 100%;
+    padding: 10px 0;
   }
 
   .navbar-menu.open {
-    display: flex; /* Display menu when open */
+    display: flex;
   }
 
   .navbar-hamburger {
-    display: flex; /* Show hamburger icon */
+    display: flex;
   }
+
+  .navbar-menu a {
+    padding: 10px 20px;
+  }
+}
+
+.user-dropdown {
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  background-color: #006ae8;
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 10; /* Ensure it appears above other elements */
+}
+
+.dropdown-item {
+  padding: 10px 20px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.dropdown-item:hover {
+  background-color: #4c9dff;
 }

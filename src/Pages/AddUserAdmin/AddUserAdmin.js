@@ -12,7 +12,7 @@ import {
     TableSortLabel,
     TablePagination,
 } from '@mui/material';
-import './CoordinatorFormTable.css';
+import './AddUserAdmin.css';
 import Navbar from '../../Components/Navbar/Navbar';
 import FooterComp from '../../Components/FooterComp/FooterComp';
 import { addNewCoordinator, getAllCoordinators, deleteCoordinator, updateCoordinator } from '../../service';
@@ -21,13 +21,16 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { TailSpin } from 'react-loader-spinner'; // Loader component
 
-function CoordinatorFormTable() {
+
+// Coordinator or Admin or SuperAdmin
+// coordinatorAdminSuperAdmin
+function AddUserAdmin() {
     // State management
     const [formData, setFormData] = useState([]); // Stores table data
     const [formValues, setFormValues] = useState({
         name: '',
-        userid: '',
-        role: 'coordinator',
+        // userid: '',
+        role: 'admin',
         phone: '',
     }); // Form data
     const [order, setOrder] = useState('asc'); // Sorting order
@@ -38,12 +41,12 @@ function CoordinatorFormTable() {
     const [loading, setLoading] = useState(false); // Loading state
     const [error, setError] = useState(''); // Error state
 
-    // Fetch all coordinators on component mount
+    // Fetch all Admin on component mount
     useEffect(() => {
         fetchAllCoordinators();
     }, []);
 
-    // Fetch coordinators from API
+    // Fetch Admin from API
     const fetchAllCoordinators = async () => {
         setLoading(true);
         setError('');
@@ -56,8 +59,8 @@ function CoordinatorFormTable() {
                 toast.error('No data available');
             }
         } catch (err) {
-            setError('Failed to fetch coordinators');
-            toast.error('Failed to fetch coordinators');
+            setError('Failed to fetch Admin Users');
+            toast.error('Failed to fetch Admin Users');
             console.error(err);
         } finally {
             setLoading(false);
@@ -70,7 +73,7 @@ function CoordinatorFormTable() {
         setFormValues({ ...formValues, [name]: value });
     };
 
-    // Add a new coordinator
+    // Add a new Admin
     const addCoordinator = async () => {
         setLoading(true);
         setError('');
@@ -128,6 +131,7 @@ function CoordinatorFormTable() {
     };
 
     // Handle edit action
+    // ... existing code ...
     const handleEdit = (index) => {
         const selectedRow = filteredData[index];
         setFormValues({
@@ -139,6 +143,7 @@ function CoordinatorFormTable() {
         });
         setEditingIndex(index);
     };
+    // ... existing code ...
 
     // Handle delete action
     const handleDelete = async (id) => {
@@ -183,7 +188,7 @@ function CoordinatorFormTable() {
     };
 
     const sortedData = sortData(formData);
-    const filteredData = sortedData.filter((row) => row.role === 'coordinator');
+    const filteredData = sortedData.filter((row) => row.role === 'admin');
 
     // Adjust pagination on data changes
     useEffect(() => {
@@ -202,11 +207,11 @@ function CoordinatorFormTable() {
             )}
             {error && <p className="error">{error}</p>}
 
-            <div className="title">Coordinator List</div>
+            <div className="title">Admin List</div>
             <div className="coordinator-form-table">
                 {/* Form Section */}
                 <div className="coordinator-form">
-                    <h3>{editingIndex !== null ? 'Edit Coordinator' : 'Add Coordinator'}</h3>
+                    <h3>{editingIndex !== null ? 'Edit User' : 'Add User'}</h3>
                     <form onSubmit={handleSubmit}>
                         <div className="form-group-row">
                             <div className="form-group">
@@ -247,7 +252,7 @@ function CoordinatorFormTable() {
 
                         </div>
                         <Button type="submit" variant="contained" color="primary">
-                            {editingIndex !== null ? 'Update Coordinator' : 'Add Coordinator'}
+                            {editingIndex !== null ? 'Update User' : 'Add User'}
                         </Button>
                     </form>
                 </div>
@@ -295,6 +300,9 @@ function CoordinatorFormTable() {
                                             <TableCell>{new Date(row.updatedAt).toLocaleString()}</TableCell>
                                             <TableCell>{new Date(row.createdAt).toLocaleString()}</TableCell>
                                             <TableCell>
+                                                {/* <Button onClick={() => handleEdit(index)}>
+                                                    <Edit />
+                                                </Button> */}
                                                 <Button onClick={() => handleEdit(page * rowsPerPage + index)}>
                                                     <Edit />
                                                 </Button>
@@ -324,4 +332,4 @@ function CoordinatorFormTable() {
     );
 }
 
-export default CoordinatorFormTable;
+export default AddUserAdmin;
