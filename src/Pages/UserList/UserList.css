@@ -13,7 +13,52 @@
   align-items: center;
   justify-content: center;
 }
+.css-20a7a0::-webkit-scrollbar {
+  width: 10px; /* Customize scrollbar width */
+}
 
-/* .user-list .css-1t66o0l-MuiPaper-root {
-  height: 70vh;
-} */
+.css-20a7a0::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Track background color */
+}
+
+.css-20a7a0::-webkit-scrollbar-thumb {
+  background: #cfcece; /* Scrollbar thumb color */
+  border-radius: 5px; /* Rounded corners for the thumb */
+}
+
+.css-20a7a0::-webkit-scrollbar-thumb:hover {
+  background: #004ba0; /* Thumb color on hover */
+}
+
+/* For Firefox */
+.css-20a7a0 {
+  scrollbar-color: #cfcece #f1f1f1; /* thumb color track color */
+  scrollbar-width: thin; /* Thin scrollbar */
+}
+
+.css-ad8qk9::-webkit-scrollbar {
+  width: 10px; /* Customize scrollbar width */
+}
+
+.css-ad8qk9::-webkit-scrollbar {
+  height: 10px; /* Customize scrollbar height */
+}
+
+.css-ad8qk9::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Track background color */
+}
+
+.css-ad8qk9::-webkit-scrollbar-thumb {
+  background: #cfcece; /* Scrollbar thumb color */
+  border-radius: 5px; /* Rounded corners for the thumb */
+}
+
+.css-ad8qk9::-webkit-scrollbar-thumb:hover {
+  background: #004ba0; /* Thumb color on hover */
+}
+
+/* For Firefox */
+.css-ad8qk9 {
+  scrollbar-color: #cfcece #f1f1f1; /* thumb color track color */
+  scrollbar-width: thin; /* Thin scrollbar */
+}

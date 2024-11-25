@@ -29,7 +29,7 @@ const getAllUsers = async () => {
     try {
         const token = localStorage.getItem('token');
 
-        const response = await axiosInstance.get(`/users/getAllUsers?page=1&count=2`, {
+        const response = await axiosInstance.get(`/users/getAllUsers?page=1&count=10`, {
             headers: {
                 Authorization: `${token}`, // Send token in header
             },
@@ -180,7 +180,7 @@ const addNewCoordinator = async (formValues) => {
 const updateCoordinator = async (id, payload) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axiosInstance.put(`${API_BASE_URL}/coordinator/updateAdmin_coordinator`, {
+        const response = await axiosInstance.patch(`${API_BASE_URL}/coordinator/updateAdmin_coordinator?id=${id}`, {
             ...payload,
             id: id
         }, {

@@ -162,8 +162,9 @@ export default function UserList() {
                 {error && <div>{error}</div>}
 
                 {!loading && !error && (
-                    <Paper sx={{ height: 600, width: '100%' }}>
+                    <Paper sx={{ height: 500, width: '100%' }}>
                         <DataGrid
+                            className="custom-data-grid"
                             rows={data}
                             columns={columns}
                             initialState={{

@@ -21,15 +21,12 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { TailSpin } from 'react-loader-spinner'; // Loader component
 
-
-// Coordinator or Admin or SuperAdmin
-// coordinatorAdminSuperAdmin
 function AddUserAdmin() {
     // State management
     const [formData, setFormData] = useState([]); // Stores table data
     const [formValues, setFormValues] = useState({
         name: '',
-        // userid: '',
+        userid: '',
         role: 'admin',
         phone: '',
     }); // Form data
@@ -41,12 +38,12 @@ function AddUserAdmin() {
     const [loading, setLoading] = useState(false); // Loading state
     const [error, setError] = useState(''); // Error state
 
-    // Fetch all Admin on component mount
+    // Fetch all User Admins on component mount
     useEffect(() => {
         fetchAllCoordinators();
     }, []);
 
-    // Fetch Admin from API
+    // Fetch User Admins from API
     const fetchAllCoordinators = async () => {
         setLoading(true);
         setError('');
@@ -59,8 +56,8 @@ function AddUserAdmin() {
                 toast.error('No data available');
             }
         } catch (err) {
-            setError('Failed to fetch Admin Users');
-            toast.error('Failed to fetch Admin Users');
+            setError('Failed to fetch User Admins');
+            toast.error('Failed to fetch User Admins');
             console.error(err);
         } finally {
             setLoading(false);
@@ -73,18 +70,18 @@ function AddUserAdmin() {
         setFormValues({ ...formValues, [name]: value });
     };
 
-    // Add a new Admin
-    const addCoordinator = async () => {
+    // Add a new User Admin
+    const addUserAdmin = async () => {
         setLoading(true);
         setError('');
         try {
             const { name, userid, role, phone } = formValues;
             const response = await addNewCoordinator({ name, userid, role, phone });
-            setFormData([...formData, response.data]); // Append new coordinator to the table
+            setFormData([...formData, response.data]); // Append new User Admin to the table
             setFormValues({ name: '', userid: '', role: '', phone: '' }); // Reset form
-            toast.success('Coordinator added successfully!');
+            toast.success('User Admin added successfully!');
         } catch (err) {
-            toast.error('Failed to add coordinator');
+            toast.error('Failed to add User Admin');
             console.error(err);
         } finally {
             setLoading(false);
@@ -95,7 +92,7 @@ function AddUserAdmin() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (editingIndex !== null) {
-            // Edit existing coordinator
+            // Edit existing User Admin
             setLoading(true);
             setError('');
             try {
@@ -110,16 +107,16 @@ function AddUserAdmin() {
 
                 setFormValues({ name: '', userid: '', phone: '', role: '' }); // Reset form
                 setEditingIndex(null); // Reset editing index
-                toast.success('Coordinator updated successfully!');
+                toast.success('User Admin updated successfully!');
             } catch (err) {
-                setError('Failed to update coordinator');
-                toast.error('Failed to update coordinator');
+                setError('Failed to update User Admin');
+                toast.error('Failed to update User Admin');
                 console.error(err);
             } finally {
                 setLoading(false);
             }
         } else {
-            addCoordinator(); // Add a new coordinator if no editing is in progress
+            addUserAdmin(); // Add a new User Admin if no editing is in progress
         }
     };
 
@@ -131,7 +128,6 @@ function AddUserAdmin() {
     };
 
     // Handle edit action
-    // ... existing code ...
     const handleEdit = (index) => {
         const selectedRow = filteredData[index];
         setFormValues({
@@ -143,20 +139,19 @@ function AddUserAdmin() {
         });
         setEditingIndex(index);
     };
-    // ... existing code ...
 
     // Handle delete action
     const handleDelete = async (id) => {
         setLoading(true);
         setError('');
         try {
-            await deleteCoordinator(id); // Delete coordinator by ID
-            toast.success('Admin User deleted successfully!');
+            await deleteCoordinator(id); // Delete User Admin by ID
+            toast.success('User Admin deleted successfully!');
             // Refresh the table data
             await fetchAllCoordinators();
         } catch (err) {
-            setError('Failed to delete Admin User');
-            toast.error('Failed to delete Admin User');
+            setError('Failed to delete User Admin');
+            toast.error('Failed to delete User Admin');
             console.error(err);
         } finally {
             setLoading(false);
@@ -211,7 +206,7 @@ function AddUserAdmin() {
             <div className="coordinator-form-table">
                 {/* Form Section */}
                 <div className="coordinator-form">
-                    <h3>{editingIndex !== null ? 'Edit User' : 'Add User'}</h3>
+                    <h3>{editingIndex !== null ? 'Edit Admin User' : 'Add Admin User'}</h3>
                     <form onSubmit={handleSubmit}>
                         <div className="form-group-row">
                             <div className="form-group">
@@ -252,7 +247,7 @@ function AddUserAdmin() {
 
                         </div>
                         <Button type="submit" variant="contained" color="primary">
-                            {editingIndex !== null ? 'Update User' : 'Add User'}
+                            {editingIndex !== null ? 'Update Admin User' : 'Add Admin User'}
                         </Button>
                     </form>
                 </div>
@@ -300,9 +295,6 @@ function AddUserAdmin() {
                                             <TableCell>{new Date(row.updatedAt).toLocaleString()}</TableCell>
                                             <TableCell>{new Date(row.createdAt).toLocaleString()}</TableCell>
                                             <TableCell>
-                                                {/* <Button onClick={() => handleEdit(index)}>
-                                                    <Edit />
-                                                </Button> */}
                                                 <Button onClick={() => handleEdit(page * rowsPerPage + index)}>
                                                     <Edit />
                                                 </Button>
