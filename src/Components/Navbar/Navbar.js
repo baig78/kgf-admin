@@ -61,7 +61,7 @@ const Navbar = () => {
                 <Link to="/location" className={isActive('/location')}>Location</Link>
                 <Link to="/add-user-admin" className={isActive('/add-user-admin')}>User Admin</Link>
                 <Link to="/coordinator" className={isActive('/coordinator')}>Coordinators</Link>
-                <Link to="/user-list" className={isActive('/user-list')}>User List</Link>
+                <Link to="/" className={isActive('/')}>User List</Link>
                 {/* User Dropdown */}
                 <div
                     className="user-dropdown"

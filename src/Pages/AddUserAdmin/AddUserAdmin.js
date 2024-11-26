@@ -15,40 +15,37 @@ import {
 import './AddUserAdmin.css';
 import Navbar from '../../Components/Navbar/Navbar';
 import FooterComp from '../../Components/FooterComp/FooterComp';
-import { addNewCoordinator, getAllCoordinators, deleteCoordinator, updateCoordinator } from '../../service';
+import { coordinatorService, userService } from '../../service';
 import { Edit, Delete } from '@mui/icons-material';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { TailSpin } from 'react-loader-spinner'; // Loader component
+import { TailSpin } from 'react-loader-spinner';
 
 function AddUserAdmin() {
-    // State management
-    const [formData, setFormData] = useState([]); // Stores table data
+    const [formData, setFormData] = useState([]);
     const [formValues, setFormValues] = useState({
         name: '',
         userid: '',
         role: 'admin',
         phone: '',
-    }); // Form data
-    const [order, setOrder] = useState('asc'); // Sorting order
-    const [orderBy, setOrderBy] = useState('name'); // Column to sort by
-    const [page, setPage] = useState(0); // Current page for pagination
-    const [rowsPerPage, setRowsPerPage] = useState(5); // Rows per page for pagination
-    const [editingIndex, setEditingIndex] = useState(null); // Index of the row being edited
-    const [loading, setLoading] = useState(false); // Loading state
-    const [error, setError] = useState(''); // Error state
+    });
+    const [order, setOrder] = useState('asc');
+    const [orderBy, setOrderBy] = useState('name');
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [editingIndex, setEditingIndex] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
-    // Fetch all User Admins on component mount
     useEffect(() => {
         fetchAllCoordinators();
     }, []);
 
-    // Fetch User Admins from API
     const fetchAllCoordinators = async () => {
         setLoading(true);
         setError('');
         try {
-            const response = await getAllCoordinators();
+            const response = await userService.getAllCoordinators();
             if (response && response.data) {
                 setFormData(response.data);
             } else {
@@ -64,21 +61,18 @@ function AddUserAdmin() {
         }
     };
 
-    // Handle input change in the form
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormValues({ ...formValues, [name]: value });
     };
 
-    // Add a new User Admin
     const addUserAdmin = async () => {
         setLoading(true);
         setError('');
         try {
-            const { name, userid, role, phone } = formValues;
-            const response = await addNewCoordinator({ name, userid, role, phone });
-            setFormData([...formData, response.data]); // Append new User Admin to the table
-            setFormValues({ name: '', userid: '', role: '', phone: '' }); // Reset form
+            const response = await coordinatorService.add(formValues);
+            setFormData([...formData, response.data]);
+            setFormValues({ name: '', userid: '', role: 'admin', phone: '' });
             toast.success('User Admin added successfully!');
         } catch (err) {
             toast.error('Failed to add User Admin');
@@ -88,25 +82,22 @@ function AddUserAdmin() {
         }
     };
 
-    // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (editingIndex !== null) {
-            // Edit existing User Admin
             setLoading(true);
             setError('');
             try {
-                const { name, phone, role, id } = formValues;  // Extract id from formValues
-                const payload = { name, phone, role, id };  // Include id in payload
-                const response = await updateCoordinator(id, payload);
+                const { name, phone, role, id } = formValues;
+                const payload = { name, phone, role };
+                const response = await coordinatorService.update(id, payload);
 
-                // Update the table with the edited data
                 const updatedData = [...formData];
                 updatedData[editingIndex] = response.data;
                 setFormData(updatedData);
 
-                setFormValues({ name: '', userid: '', phone: '', role: '' }); // Reset form
-                setEditingIndex(null); // Reset editing index
+                setFormValues({ name: '', userid: '', phone: '', role: 'admin' });
+                setEditingIndex(null);
                 toast.success('User Admin updated successfully!');
             } catch (err) {
                 setError('Failed to update User Admin');
@@ -116,18 +107,16 @@ function AddUserAdmin() {
                 setLoading(false);
             }
         } else {
-            addUserAdmin(); // Add a new User Admin if no editing is in progress
+            addUserAdmin();
         }
     };
 
-    // Handle sorting
     const handleRequestSort = (property) => {
         const isAsc = orderBy === property && order === 'asc';
         setOrder(isAsc ? 'desc' : 'asc');
         setOrderBy(property);
     };
 
-    // Handle edit action
     const handleEdit = (index) => {
         const selectedRow = filteredData[index];
         setFormValues({
@@ -135,19 +124,17 @@ function AddUserAdmin() {
             userid: selectedRow.userid,
             phone: selectedRow.phone,
             role: selectedRow.role,
-            id: selectedRow._id  // Add the ID to formValues
+            id: selectedRow._id
         });
         setEditingIndex(index);
     };
 
-    // Handle delete action
     const handleDelete = async (id) => {
         setLoading(true);
         setError('');
         try {
-            await deleteCoordinator(id); // Delete User Admin by ID
+            await coordinatorService.delete(id);
             toast.success('User Admin deleted successfully!');
-            // Refresh the table data
             await fetchAllCoordinators();
         } catch (err) {
             setError('Failed to delete User Admin');
@@ -158,14 +145,12 @@ function AddUserAdmin() {
         }
     };
 
-    // Handle pagination
     const handleChangePage = (event, newPage) => setPage(newPage);
     const handleChangeRowsPerPage = (event) => {
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);
     };
 
-    // Sort and filter data
     const sortData = (data) => {
         return data.sort((a, b) => {
             if (orderBy === 'name') {
@@ -185,7 +170,6 @@ function AddUserAdmin() {
     const sortedData = sortData(formData);
     const filteredData = sortedData.filter((row) => row.role === 'admin');
 
-    // Adjust pagination on data changes
     useEffect(() => {
         if (page > Math.floor(filteredData.length / rowsPerPage)) {
             setPage(0);
@@ -204,7 +188,6 @@ function AddUserAdmin() {
 
             <div className="title">Admin List</div>
             <div className="coordinator-form-table">
-                {/* Form Section */}
                 <div className="coordinator-form">
                     <h3>{editingIndex !== null ? 'Edit Admin User' : 'Add Admin User'}</h3>
                     <form onSubmit={handleSubmit}>
@@ -221,7 +204,6 @@ function AddUserAdmin() {
                                 />
                             </div>
                             <div className="form-group">
-
                                 <TextField
                                     label="User ID"
                                     variant="outlined"
@@ -233,7 +215,6 @@ function AddUserAdmin() {
                                 />
                             </div>
                             <div className="form-group">
-
                                 <TextField
                                     label="Phone"
                                     variant="outlined"
@@ -244,7 +225,6 @@ function AddUserAdmin() {
                                     margin="normal"
                                 />
                             </div>
-
                         </div>
                         <Button type="submit" variant="contained" color="primary">
                             {editingIndex !== null ? 'Update Admin User' : 'Add Admin User'}
@@ -252,7 +232,6 @@ function AddUserAdmin() {
                     </form>
                 </div>
 
-                {/* Table Section */}
                 <div className="coordinator-table">
                     <TableContainer component={Paper}>
                         <Table>

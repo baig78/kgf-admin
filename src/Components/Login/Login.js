@@ -1,60 +1,45 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './Login.css';
-import { adminLogin } from '../../service.js';
+import { authService } from '../../service';
+import { setToken } from '../../authSlice';
 
 function Login() {
-    const [phone, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
-
-    // const navigate = useNavigate();
-    // useEffect(() => {
-    //     if (localStorage.getItem('token') !== undefined) {
-    //         navigate('/coordinator');
-    //     }
-
-    // }, [])
+    const dispatch = useDispatch();
 
     const navigate = useNavigate();
-
-    // useEffect(() => {
-    //     // some logic that uses navigate
-    //     navigate('/coordinator');  // example logic
-    // }, [navigate]);
-
-    // if (localStorage.getItem('token') !== undefined) {
-    //     navigate('/coordinator');
-    // }
 
     const handleLoginClick = async (e) => {
         e.preventDefault(); // Prevent page refresh
         setLoading(true); // Show loading state
 
         try {
-            const phone_or_userId = password
-            const credentials = { phone_or_userId, password };
-            const response = await adminLogin(credentials);
+            const credentials = { phone_or_userId: phone, password };
+            const response = await authService.login(credentials);
 
             // Handle successful login response
             console.log('Login successful:', response);
-            localStorage.setItem('token', response.token);
+            dispatch(setToken(response.token));
             localStorage.setItem('name', phone);
             toast.success('Login successful!', {
                 position: 'top-right',
                 autoClose: 1000,
             });
 
-            // Navigate to coordinator page after successful login
+            // Navigate to user-list page after successful login
             setTimeout(() => {
-                navigate('/user-list');
+                navigate('/', { replace: true }); // Using replace to prevent going back to login
             }, 1000);
         } catch (err) {
             // Handle errors
             console.error('Login failed:', err);
-            toast.error(err.response?.data?.message || 'Invalid login credentials', {
+            toast.error(err.message || 'Invalid login credentials', {
                 position: 'top-right',
                 autoClose: 1000,
             });
@@ -85,7 +70,7 @@ function Login() {
                                 id="username"
                                 placeholder="Enter your username"
                                 required
-                                onChange={(e) => setEmail(e.target.value)}
+                                onChange={(e) => setPhone(e.target.value)}
                             />
                         </div>
                         <div className="form-group-login">

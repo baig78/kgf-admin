@@ -2,42 +2,34 @@ import React, { useEffect, useState } from 'react';
 import Navbar from "../../Components/Navbar/Navbar";
 import FooterComp from "../../Components/FooterComp/FooterComp";
 import './Location.css';
-import { getAllCountries, getAllStates, addCity, addState, addCountry } from '../../service';
+import { addressService } from '../../service';
 import { Button } from '@mui/material';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { TailSpin } from 'react-loader-spinner';  // Importing TailSpin loader
+import { TailSpin } from 'react-loader-spinner';
 
 const LocationComponent = () => {
-    // State variables for the location creation process
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [countries, setCountries] = useState([]);
     const [states, setStates] = useState([]);
-    const [selectedCountry, setSelectedCountry] = useState(null); // Use null instead of empty string
+    const [selectedCountry, setSelectedCountry] = useState(null);
     const [selectedState, setSelectedState] = useState('');
     const [cityName, setCityName] = useState('');
     const [stateName, setStateName] = useState('');
     const [selectedCountryCity, setSelectedCountryCity] = useState('');
     const [selectedCountryState, setSelectedCountryState] = useState('');
 
-    // Fetch countries on component mount
     useEffect(() => {
         fetchCountries();
     }, []);
 
-    // Fetch all countries
     const fetchCountries = async () => {
         setError('');
         setLoading(true);
         try {
-            const response = await getAllCountries();
-            const rawData = response?.data || response;
-            if (!Array.isArray(rawData)) {
-                throw new Error('Unexpected API response format');
-            }
-            // Filter out duplicate countries
-            const uniqueCountries = rawData.reduce((acc, country) => {
+            const response = await addressService.getCountries();
+            const uniqueCountries = response.reduce((acc, country) => {
                 if (!acc.some(item => item.name === country.name)) {
                     acc.push({ id: country._id, name: country.name });
                 }
@@ -45,7 +37,7 @@ const LocationComponent = () => {
             }, []);
             setCountries(uniqueCountries);
         } catch (err) {
-            console.error("Error fetching countries:", err.message || err);
+            console.error("Error fetching countries:", err);
             setError('Failed to load countries. Please try again later.');
             toast.error('Failed to load countries.');
         } finally {
@@ -53,45 +45,36 @@ const LocationComponent = () => {
         }
     };
 
-    // Fetch states based on selected country
     useEffect(() => {
         if (selectedCountry) {
             fetchStates(selectedCountry);
         } else {
-            setStates([]);  // Reset states when country is not selected
+            setStates([]);
         }
-    }, [selectedCountry]); // Trigger when selectedCountry changes
+    }, [selectedCountry]);
 
-    // Fetch states based on selected city country
     useEffect(() => {
         if (selectedCountryCity) {
             fetchStates(selectedCountryCity);
         } else {
-            setStates([]); // Clear states if no country is selected
+            setStates([]);
         }
     }, [selectedCountryCity]);
 
-    // Fetch states for a given country
     const fetchStates = async (countryId) => {
         setError('');
         setLoading(true);
         try {
-            const response = await getAllStates(countryId);
-            const rawData = response?.data || response;
-            if (!Array.isArray(rawData)) {
-                throw new Error('Unexpected API response format');
-            }
-            // Filter out states for the selected country
-            const statesForCountry = rawData.filter(state => state.country === countryId)
-                .reduce((acc, state) => {
-                    if (!acc.some(item => item.name === state.name)) {
-                        acc.push({ id: state._id, name: state.name });
-                    }
-                    return acc;
-                }, []);
+            const response = await addressService.getStates(countryId);
+            const statesForCountry = response.reduce((acc, state) => {
+                if (!acc.some(item => item.name === state.name)) {
+                    acc.push({ id: state._id, name: state.name });
+                }
+                return acc;
+            }, []);
             setStates(statesForCountry);
         } catch (err) {
-            console.error("Error fetching states:", err.message || err);
+            console.error("Error fetching states:", err);
             setError('Failed to load states. Please try again later.');
             toast.error('Failed to load states.');
         } finally {
@@ -99,11 +82,10 @@ const LocationComponent = () => {
         }
     };
 
-    // Create a new city
     const createCity = async () => {
         try {
             const cityData = { name: cityName, state: selectedState };
-            const response = await addCity([cityData]);
+            const response = await addressService.addCity(cityData);
             if (response.success) {
                 toast.success('City added successfully!');
                 setCityName('');
@@ -112,16 +94,15 @@ const LocationComponent = () => {
                 throw new Error('Failed to add city.');
             }
         } catch (error) {
-            console.error('Error adding city:', error.message || error);
+            console.error('Error adding city:', error);
             toast.error('Please add City.');
         }
     };
 
-    // Create a new state
     const createState = async () => {
         try {
             const stateData = { name: stateName, country: selectedCountry };
-            const response = await addState([stateData]);
+            const response = await addressService.addState(stateData);
             if (response.success) {
                 toast.success('State added successfully!');
                 setStateName('');
@@ -130,16 +111,15 @@ const LocationComponent = () => {
                 throw new Error('Failed to add state.');
             }
         } catch (error) {
-            console.error('Error adding state:', error.message || error);
+            console.error('Error adding state:', error);
             toast.error('Please enter State');
         }
     };
 
-    // Create a new country
     const createCountry = async () => {
         try {
             const countryData = { name: selectedCountry };
-            const response = await addCountry([countryData]);
+            const response = await addressService.addCountry(countryData);
             if (response.success) {
                 toast.success('Country added successfully!');
                 setSelectedCountry('');
@@ -147,25 +127,22 @@ const LocationComponent = () => {
                 throw new Error('Failed to add country.');
             }
         } catch (error) {
-            console.error('Error adding country:', error.message || error);
+            console.error('Error adding country:', error);
             toast.error('Please add Country.');
         }
     };
 
-    // Handle country change for state creation
     const handleCountryChangeForState = (countryId) => {
         setSelectedCountryState(countryId);
     };
 
-    // Handle country change for city creation
     const handleCountryChangeForCity = (countryId) => {
         setSelectedCountryCity(countryId);
-        setSelectedState(''); // Reset state selection when country changes in Create City
+        setSelectedState('');
     };
 
-    // Handle state change for city creation
     const handleStateChange = (stateId) => {
-        setSelectedState(stateId); // Update selected state
+        setSelectedState(stateId);
     };
 
     return (

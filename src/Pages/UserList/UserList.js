@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { DataGrid, GridActionsCellItem, GridToolbarQuickFilter, GridToolbarContainer, GridToolbarFilterButton } from '@mui/x-data-grid';
 import { Paper, Button, Box } from '@mui/material';
 import { Delete as DeleteIcon, Download as DownloadIcon, PictureAsPdf as PictureAsPdfIcon } from '@mui/icons-material';
@@ -8,7 +8,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import './UserList.css';
 import FooterComp from '../../Components/FooterComp/FooterComp';
-import { getAllUsers } from '../../service';
+import { userService } from '../../service';
 
 export default function UserList() {
 
@@ -16,15 +16,16 @@ export default function UserList() {
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState([]);
     const [filteredRows, setFilteredRows] = useState([]);
-
+    const [page, setPage] = useState(1);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
 
     // Fetch user data from API
-    const getAllUsersData = async () => {
+    const getAllUsersData = useCallback(async () => {
         setError(''); // Clear previous errors
         setLoading(true); // Show loading state
 
         try {
-            const response = await getAllUsers();
+            const response = await userService.getAllUsers(page, rowsPerPage);
             // Handle successful response
             const usersData = response.data.map(user => ({
                 id: user._id,
@@ -48,11 +49,11 @@ export default function UserList() {
         } finally {
             setLoading(false); // Stop loading state
         }
-    };
+    }, [page, rowsPerPage]);
 
     useEffect(() => {
         getAllUsersData();
-    }, []);
+    }, [getAllUsersData]);
 
     const handleDeleteClick = (id) => {
         setData((prevData) => prevData.filter((row) => row.id !== id));
@@ -124,7 +125,6 @@ export default function UserList() {
             ],
         },
     ];
-
 
     function CustomToolbar() {
         return (
@@ -207,6 +207,8 @@ export default function UserList() {
                                     quickFilterProps: { debounceMs: 500 },
                                 },
                             }}
+                            onPageChange={(newPage) => setPage(newPage + 1)}
+                            onPageSizeChange={(newPageSize) => setRowsPerPage(newPageSize)}
                         />
                     </Paper>
                 )}
