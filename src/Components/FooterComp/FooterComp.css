@@ -3,6 +3,10 @@
   color: #ffffff;
   padding: 20px 0;
   text-align: center;
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+  z-index: 9;
 }
 
 .footer-bottom {

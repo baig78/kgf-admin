@@ -100,7 +100,7 @@ const addressService = {
 
     addCity: async (cityData) => {
         try {
-            const response = await axiosInstance.post('/address/addCity', cityData);
+            const response = await axiosInstance.post('/address/addCity', [cityData]);
             return response.data;
         } catch (error) {
             throw error.response?.data || error.message;
@@ -109,7 +109,7 @@ const addressService = {
 
     addState: async (stateData) => {
         try {
-            const response = await axiosInstance.post('/address/addState', stateData);
+            const response = await axiosInstance.post('/address/addState', [stateData]);
             return response.data;
         } catch (error) {
             throw error.response?.data || error.message;
@@ -118,7 +118,7 @@ const addressService = {
 
     addCountry: async (countryData) => {
         try {
-            const response = await axiosInstance.post('/address/addCountry', countryData);
+            const response = await axiosInstance.post('/address/addCountry', [countryData]);
             return response.data;
         } catch (error) {
             throw error.response?.data || error.message;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { toast, ToastContainer } from 'react-toastify';
@@ -12,8 +12,15 @@ function Login() {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const dispatch = useDispatch();
-
     const navigate = useNavigate();
+
+    useEffect(() => {
+        // Check if user is already logged in
+        const token = localStorage.getItem('token');
+        if (token) {
+            navigate('/user-list', { replace: true });
+        }
+    }, [navigate]);
 
     const handleLoginClick = async (e) => {
         e.preventDefault(); // Prevent page refresh
@@ -27,15 +34,14 @@ function Login() {
             console.log('Login successful:', response);
             dispatch(setToken(response.token));
             localStorage.setItem('name', phone);
+            localStorage.setItem('token', response.token); // Store token in localStorage
             toast.success('Login successful!', {
                 position: 'top-right',
                 autoClose: 1000,
             });
 
             // Navigate to user-list page after successful login
-            setTimeout(() => {
-                navigate('/', { replace: true }); // Using replace to prevent going back to login
-            }, 1000);
+            navigate('/user-list', { replace: true }); // Using replace to prevent going back to login
         } catch (err) {
             // Handle errors
             console.error('Login failed:', err);
@@ -62,7 +68,7 @@ function Login() {
             <div className="login-container">
                 <div className="login-card">
                     <h2>Welcome to Admin Login</h2>
-                    <form>
+                    <form onSubmit={handleLoginClick}>
                         <div className="form-group-login">
                             <label htmlFor="username">Username</label>
                             <input
@@ -70,6 +76,7 @@ function Login() {
                                 id="username"
                                 placeholder="Enter your username"
                                 required
+                                value={phone}
                                 onChange={(e) => setPhone(e.target.value)}
                             />
                         </div>
@@ -80,13 +87,13 @@ function Login() {
                                 id="password"
                                 placeholder="Enter your password"
                                 required
+                                value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                             />
                         </div>
                         <button
-                            type="button"
+                            type="submit"
                             className="login-button"
-                            onClick={handleLoginClick}
                         >
                             Login
                         </button>

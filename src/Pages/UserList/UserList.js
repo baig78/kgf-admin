@@ -9,6 +9,7 @@ import 'jspdf-autotable';
 import './UserList.css';
 import FooterComp from '../../Components/FooterComp/FooterComp';
 import { userService } from '../../service';
+import { TailSpin } from 'react-loader-spinner';
 
 export default function UserList() {
 
@@ -128,7 +129,7 @@ export default function UserList() {
 
     function CustomToolbar() {
         return (
-            <GridToolbarContainer>
+            <GridToolbarContainer sx={{ justifyContent: 'flex-end' }}>
                 <GridToolbarFilterButton />
                 <GridToolbarQuickFilter />
                 <Button
@@ -158,7 +159,11 @@ export default function UserList() {
                     <div className='title'>User List</div>
                 </Box>
 
-                {loading && <div style={{ textAlign: 'center' }}>Loading...</div>}
+                {loading && (
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                        <TailSpin color="#00BFFF" height={80} width={80} />
+                    </div>
+                )}
                 {error && <div>{error}</div>}
 
                 {!loading && !error && (

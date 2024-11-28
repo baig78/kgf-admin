@@ -22,7 +22,7 @@ const Navbar = () => {
 
     const handleLogout = () => {
         localStorage.clear();
-        navigate('/login');
+        navigate('/');
     };
 
     const handleClickOutside = (event) => {
@@ -40,8 +40,7 @@ const Navbar = () => {
         };
     }, []);
 
-    const userName = localStorage.getItem('name'); // Replace with dynamic username if available
-
+    const userName = localStorage.getItem('name'); // Replace with dynamic username if available        
     // Function to check if the link is active
     const isActive = (path) => {
         return location.pathname === path ? 'active' : '';
@@ -61,7 +60,7 @@ const Navbar = () => {
                 <Link to="/location" className={isActive('/location')}>Location</Link>
                 <Link to="/add-user-admin" className={isActive('/add-user-admin')}>User Admin</Link>
                 <Link to="/coordinator" className={isActive('/coordinator')}>Coordinators</Link>
-                <Link to="/" className={isActive('/')}>User List</Link>
+                <Link to="/user-list" className={isActive('/user-list')}>User List</Link>
                 {/* User Dropdown */}
                 <div
                     className="user-dropdown"

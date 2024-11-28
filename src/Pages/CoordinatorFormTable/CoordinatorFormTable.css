@@ -1,5 +1,5 @@
 .coordinator-form-table {
-  padding: 40px 65px;
+  padding: 20px 65px 109px 65px;
 }
 
 .title {
@@ -61,7 +61,7 @@ table th {
 .form-group-row {
   display: flex;
   flex-wrap: wrap; /* Allow input fields to wrap into the next line if needed */
-  gap: 20px; /* Maintain space between input fields */
+  gap: 37px; /* Maintain space between input fields */
 }
 
 .form-group {
@@ -113,7 +113,7 @@ table th {
 
 .coordinator-form-table .coordinator-form {
   border: 1px solid #c2c2c2;
-  padding: 0 30px 60px 30px;
+  padding: 20px;
 }
 
 .coordinator-form-table .coordinator-table {

@@ -16,7 +16,7 @@ import './AddUserAdmin.css';
 import Navbar from '../../Components/Navbar/Navbar';
 import FooterComp from '../../Components/FooterComp/FooterComp';
 import { coordinatorService, userService } from '../../service';
-import { Edit, Delete } from '@mui/icons-material';
+import { Edit, Delete, ExpandMore, ExpandLess } from '@mui/icons-material';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { TailSpin } from 'react-loader-spinner';
@@ -29,6 +29,11 @@ function AddUserAdmin() {
         role: 'admin',
         phone: '',
     });
+    const [formErrors, setFormErrors] = useState({
+        name: '',
+        userid: '',
+        phone: ''
+    });
     const [order, setOrder] = useState('asc');
     const [orderBy, setOrderBy] = useState('name');
     const [page, setPage] = useState(0);
@@ -36,10 +41,41 @@ function AddUserAdmin() {
     const [editingIndex, setEditingIndex] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [showForm, setShowForm] = useState(false);
 
     useEffect(() => {
         fetchAllCoordinators();
     }, []);
+
+    const validateField = (name, value) => {
+        let error = '';
+        switch (name) {
+            case 'name':
+                if (!value) {
+                    error = 'Name is required';
+                } else if (value.length < 2) {
+                    error = 'Name must be at least 2 characters';
+                }
+                break;
+            case 'userid':
+                if (!value) {
+                    error = 'User ID is required';
+                } else if (value.length < 4) {
+                    error = 'User ID must be at least 4 characters';
+                }
+                break;
+            case 'phone':
+                if (!value) {
+                    error = 'Phone is required';
+                } else if (!/^\d{10}$/.test(value)) {
+                    error = 'Phone must be 10 digits';
+                }
+                break;
+            default:
+                break;
+        }
+        return error;
+    };
 
     const fetchAllCoordinators = async () => {
         setLoading(true);
@@ -64,9 +100,30 @@ function AddUserAdmin() {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormValues({ ...formValues, [name]: value });
+
+        // Validate field on change
+        const error = validateField(name, value);
+        setFormErrors(prev => ({
+            ...prev,
+            [name]: error
+        }));
+    };
+
+    const isFormValid = () => {
+        const errors = {
+            name: validateField('name', formValues.name),
+            userid: validateField('userid', formValues.userid),
+            phone: validateField('phone', formValues.phone)
+        };
+        setFormErrors(errors);
+        return !Object.values(errors).some(error => error !== '');
     };
 
     const addUserAdmin = async () => {
+        if (!isFormValid()) {
+            return;
+        }
+
         setLoading(true);
         setError('');
         try {
@@ -84,6 +141,10 @@ function AddUserAdmin() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!isFormValid()) {
+            return;
+        }
+
         if (editingIndex !== null) {
             setLoading(true);
             setError('');
@@ -127,6 +188,7 @@ function AddUserAdmin() {
             id: selectedRow._id
         });
         setEditingIndex(index);
+        setShowForm(true);
     };
 
     const handleDelete = async (id) => {
@@ -143,6 +205,12 @@ function AddUserAdmin() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleReset = () => {
+        setFormValues({ name: '', userid: '', role: 'admin', phone: '' });
+        setFormErrors({ name: '', userid: '', phone: '' });
+        setEditingIndex(null);
     };
 
     const handleChangePage = (event, newPage) => setPage(newPage);
@@ -189,47 +257,68 @@ function AddUserAdmin() {
             <div className="title">Admin List</div>
             <div className="coordinator-form-table">
                 <div className="coordinator-form">
-                    <h3>{editingIndex !== null ? 'Edit Admin User' : 'Add Admin User'}</h3>
-                    <form onSubmit={handleSubmit}>
-                        <div className="form-group-row">
-                            <div className="form-group">
-                                <TextField
-                                    label="Name"
-                                    variant="outlined"
-                                    name="name"
-                                    value={formValues.name}
-                                    onChange={handleInputChange}
-                                    fullWidth
-                                    margin="normal"
-                                />
+                    <div
+                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                        onClick={() => setShowForm(!showForm)}
+                    >
+                        <h3 style={{ marginRight: '10px' }}>
+                            {editingIndex !== null ? 'Edit Admin User' : 'Add Admin User'}
+                        </h3>
+                        {showForm ? <ExpandLess /> : <ExpandMore />}
+                    </div>
+                    {showForm && (
+                        <form onSubmit={handleSubmit}>
+                            <div className="form-group-row">
+                                <div className="form-group">
+                                    <TextField
+                                        label="Name"
+                                        variant="outlined"
+                                        name="name"
+                                        value={formValues.name}
+                                        onChange={handleInputChange}
+                                        fullWidth
+                                        margin="normal"
+                                        error={!!formErrors.name}
+                                        helperText={formErrors.name}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <TextField
+                                        label="User ID"
+                                        variant="outlined"
+                                        name="userid"
+                                        value={formValues.userid}
+                                        onChange={handleInputChange}
+                                        fullWidth
+                                        margin="normal"
+                                        error={!!formErrors.userid}
+                                        helperText={formErrors.userid}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <TextField
+                                        label="Phone"
+                                        variant="outlined"
+                                        name="phone"
+                                        value={formValues.phone}
+                                        onChange={handleInputChange}
+                                        fullWidth
+                                        margin="normal"
+                                        error={!!formErrors.phone}
+                                        helperText={formErrors.phone}
+                                    />
+                                </div>
                             </div>
-                            <div className="form-group">
-                                <TextField
-                                    label="User ID"
-                                    variant="outlined"
-                                    name="userid"
-                                    value={formValues.userid}
-                                    onChange={handleInputChange}
-                                    fullWidth
-                                    margin="normal"
-                                />
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginRight: '10px' }}>
+                                <Button type="button" variant="outlined" color="secondary" onClick={handleReset}>
+                                    Reset
+                                </Button>
+                                <Button type="submit" variant="contained" color="primary">
+                                    {editingIndex !== null ? 'Update Admin User' : 'Add Admin User'}
+                                </Button>
                             </div>
-                            <div className="form-group">
-                                <TextField
-                                    label="Phone"
-                                    variant="outlined"
-                                    name="phone"
-                                    value={formValues.phone}
-                                    onChange={handleInputChange}
-                                    fullWidth
-                                    margin="normal"
-                                />
-                            </div>
-                        </div>
-                        <Button type="submit" variant="contained" color="primary">
-                            {editingIndex !== null ? 'Update Admin User' : 'Add Admin User'}
-                        </Button>
-                    </form>
+                        </form>
+                    )}
                 </div>
 
                 <div className="coordinator-table">

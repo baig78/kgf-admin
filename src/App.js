@@ -20,9 +20,9 @@ function App() {
           <Routes>
             {/* <Route path="/" element={<WelcomePage />} /> */}
             {/* <Route path="/admin" element={<CoordinatorFormTable />} /> */}
-            <Route path="/login" element={<Login />} />
+            <Route path="/" element={<Login />} />
             <Route path="/coordinator" element={<CoordinatorFormTable />} />
-            <Route path="/" element={<UserList />} />
+            <Route path="/user-list" element={<UserList />} />
             <Route path="/location" element={<LocationComponent />} />
             <Route path="/add-user-admin" element={<AddUserAdmin />} />
             {/* <Route path="/pages" element={<Dummy />} /> */}
