@@ -73,7 +73,7 @@ const LocationComponent = () => {
         }
     };
 
-    const validateCityData = () => {
+    const validateCityData = async () => {
         const errors = {};
         if (!selectedState) {
             errors.state = 'Please select a state';
@@ -83,12 +83,23 @@ const LocationComponent = () => {
         } else if (cityName.trim().length < 2) {
             errors.cityName = 'City name must be at least 2 characters long';
         }
+
+        // Check if city already exists in selected state
+        try {
+            const cities = await addressService.getCities(selectedState);
+            if (cities.some(city => city.name.toLowerCase() === cityName.trim().toLowerCase())) {
+                errors.cityName = 'This city already exists in the selected state';
+            }
+        } catch (err) {
+            console.error("Error checking city existence:", err);
+        }
+
         setValidationErrors(errors);
         return Object.keys(errors).length === 0;
     };
 
     const createCity = async () => {
-        if (!validateCityData()) return;
+        if (!await validateCityData()) return;
 
         try {
             const cityData = {
@@ -110,7 +121,7 @@ const LocationComponent = () => {
         }
     };
 
-    const validateStateData = () => {
+    const validateStateData = async () => {
         const errors = {};
         if (!selectedCountryState) {
             errors.country = 'Please select a country';
@@ -120,12 +131,23 @@ const LocationComponent = () => {
         } else if (stateName.trim().length < 2) {
             errors.stateName = 'State name must be at least 2 characters long';
         }
+
+        // Check if state already exists in selected country
+        try {
+            const statesResponse = await addressService.getStates(selectedCountryState);
+            if (statesResponse.some(state => state.name.toLowerCase() === stateName.trim().toLowerCase())) {
+                errors.stateName = 'This state already exists in the selected country';
+            }
+        } catch (err) {
+            console.error("Error checking state existence:", err);
+        }
+
         setValidationErrors(errors);
         return Object.keys(errors).length === 0;
     };
 
     const createState = async () => {
-        if (!validateStateData()) return;
+        if (!await validateStateData()) return;
 
         try {
             const stateData = {
