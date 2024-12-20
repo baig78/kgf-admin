@@ -13,6 +13,7 @@ const LocationComponent = () => {
     const [error, setError] = useState('');
     const [countries, setCountries] = useState([]);
     const [states, setStates] = useState([]);
+    const [cities, setCities] = useState([]);
     const [selectedState, setSelectedState] = useState('');
     const [cityName, setCityName] = useState('');
     const [stateName, setStateName] = useState('');
@@ -20,6 +21,7 @@ const LocationComponent = () => {
     const [selectedCountryState, setSelectedCountryState] = useState('');
     const [countryName, setCountryName] = useState('');
     const [validationErrors, setValidationErrors] = useState({});
+    const [countryAccordionExpanded, setCountryAccordionExpanded] = useState(false);
 
     useEffect(() => {
         fetchCountries();
@@ -36,6 +38,7 @@ const LocationComponent = () => {
                 }
                 return acc;
             }, []);
+            uniqueCountries.sort((a, b) => a.name.localeCompare(b.name));
             setCountries(uniqueCountries);
         } catch (err) {
             console.error("Error fetching countries:", err);
@@ -53,6 +56,22 @@ const LocationComponent = () => {
         }
     }, [selectedCountryCity]);
 
+    useEffect(() => {
+        if (selectedState) {
+            fetchCities(selectedState);
+        } else {
+            setCities([]);
+        }
+    }, [selectedState]);
+
+    useEffect(() => {
+        if (selectedCountryState) {
+            fetchStates(selectedCountryState);
+        } else {
+            setStates([]);
+        }
+    }, [selectedCountryState]);
+
     const fetchStates = async (countryId) => {
         setError('');
         setLoading(true);
@@ -64,10 +83,32 @@ const LocationComponent = () => {
                 }
                 return acc;
             }, []);
+            statesForCountry.sort((a, b) => a.name.localeCompare(b.name));
             setStates(statesForCountry);
         } catch (err) {
             console.error("Error fetching states:", err);
             setError('Failed to load states. Please try again later.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchCities = async (stateId) => {
+        setError('');
+        setLoading(true);
+        try {
+            const response = await addressService.getCities(stateId);
+            const citiesForState = response.reduce((acc, city) => {
+                if (!acc.some(item => item.name === city.name)) {
+                    acc.push({ id: city._id, name: city.name });
+                }
+                return acc;
+            }, []);
+            citiesForState.sort((a, b) => a.name.localeCompare(b.name));
+            setCities(citiesForState);
+        } catch (err) {
+            console.error("Error fetching cities:", err);
+            setError('Failed to load cities. Please try again later.');
         } finally {
             setLoading(false);
         }
@@ -110,7 +151,7 @@ const LocationComponent = () => {
             if (response.success) {
                 toast.success('City added successfully!');
                 setCityName('');
-                setSelectedState('');
+                fetchCities(selectedState);
                 setValidationErrors({});
             } else {
                 throw new Error(response.message || 'Failed to add city.');
@@ -158,7 +199,7 @@ const LocationComponent = () => {
             if (response.success) {
                 toast.success('State added successfully!');
                 setStateName('');
-                setSelectedCountryState('');
+                fetchStates(selectedCountryState);
                 setValidationErrors({});
             } else {
                 throw new Error(response.message || 'Failed to add state.');
@@ -239,7 +280,7 @@ const LocationComponent = () => {
                 )}
 
                 <Box sx={{ mb: 4 }}>
-                    <Accordion>
+                    <Accordion expanded={countryAccordionExpanded} onChange={() => setCountryAccordionExpanded(!countryAccordionExpanded)}>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <Typography variant="h6">Create Country</Typography>
                         </AccordionSummary>
@@ -256,6 +297,18 @@ const LocationComponent = () => {
                             <Button variant="contained" onClick={createCountry} sx={{ mt: 2 }}>
                                 Submit
                             </Button>
+
+                            {countryAccordionExpanded && (
+                                <Box sx={{ mt: 4 }}>
+                                    <Typography variant="h6" gutterBottom>
+                                        All Countries
+                                    </Typography>
+                                    <Typography>
+                                        {countries.sort((a, b) => a.name.localeCompare(b.name)).map(country => country.name).join(', ')}
+                                    </Typography>
+                                </Box>
+                            )}
+
                         </AccordionDetails>
                     </Accordion>
 
@@ -298,6 +351,20 @@ const LocationComponent = () => {
                             <Button variant="contained" onClick={createState} sx={{ mt: 2 }}>
                                 Submit
                             </Button>
+
+                            {selectedCountryState && (
+                                <Box sx={{ mt: 4 }}>
+                                    <Typography variant="h6" gutterBottom>
+                                        States in Selected Country
+                                    </Typography>
+                                    <Typography>
+                                        {states.length > 0 ?
+                                            states.sort((a, b) => a.name.localeCompare(b.name)).map(state => state.name).join(', ') :
+                                            'No states available for this country'
+                                        }
+                                    </Typography>
+                                </Box>
+                            )}
                         </AccordionDetails>
                     </Accordion>
 
@@ -359,6 +426,20 @@ const LocationComponent = () => {
                             <Button variant="contained" onClick={createCity} sx={{ mt: 2 }}>
                                 Submit
                             </Button>
+
+                            {selectedState && (
+                                <Box sx={{ mt: 4 }}>
+                                    <Typography variant="h6" gutterBottom>
+                                        Cities in Selected State
+                                    </Typography>
+                                    <Typography>
+                                        {cities.length > 0 ?
+                                            cities.sort((a, b) => a.name.localeCompare(b.name)).map(city => city.name).join(', ') :
+                                            'No cities available for this state'
+                                        }
+                                    </Typography>
+                                </Box>
+                            )}
                         </AccordionDetails>
                     </Accordion>
                 </Box>

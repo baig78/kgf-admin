@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { DataGrid, GridActionsCellItem, GridToolbarQuickFilter, GridToolbarContainer, GridToolbarFilterButton } from '@mui/x-data-grid';
-import { Paper, Button, Box } from '@mui/material';
+import { Paper, Button, Box, Dialog, DialogContent, Typography } from '@mui/material';
 import { Delete as DeleteIcon, Download as DownloadIcon, PictureAsPdf as PictureAsPdfIcon } from '@mui/icons-material';
 import Navbar from '../../Components/Navbar/Navbar';
 import * as XLSX from 'xlsx';
@@ -19,6 +19,9 @@ export default function UserList() {
     const [filteredRows, setFilteredRows] = useState([]);
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [selectedUserData, setSelectedUserData] = useState(null);
+    const [openImageDialog, setOpenImageDialog] = useState(false);
 
     // Fetch user data from API
     const getAllUsersData = useCallback(async () => {
@@ -58,6 +61,18 @@ export default function UserList() {
 
     const handleDeleteClick = (id) => {
         setData((prevData) => prevData.filter((row) => row.id !== id));
+    };
+
+    const handleImageClick = (imageUrl, rowData) => {
+        setSelectedImage(imageUrl);
+        setSelectedUserData(rowData);
+        setOpenImageDialog(true);
+    };
+
+    const handleCloseDialog = () => {
+        setOpenImageDialog(false);
+        setSelectedImage(null);
+        setSelectedUserData(null);
     };
 
     const exportToExcel = () => {
@@ -105,7 +120,21 @@ export default function UserList() {
     };
 
     const columns = [
-        { field: 'photo', headerName: 'Photo', width: 100, renderCell: (params) => (<img src={params.value} alt="profile" width="50" height="50" />) },
+        {
+            field: 'photo',
+            headerName: 'Photo',
+            width: 100,
+            renderCell: (params) => (
+                <img
+                    src={params.value}
+                    alt="profile"
+                    width="60"
+                    height="60"
+                    style={{ cursor: 'pointer', objectFit: 'cover', borderRadius: '50%' }}
+                    onClick={() => handleImageClick(params.value, params.row)}
+                />
+            )
+        },
         { field: 'surname', headerName: 'Surname', width: 130, cellClassName: 'vertical-center' },
         { field: 'name', headerName: 'Name', width: 130, cellClassName: 'vertical-center' },
         { field: 'gothram', headerName: 'Gothram', width: 130, cellClassName: 'vertical-center' },
@@ -217,6 +246,51 @@ export default function UserList() {
                         />
                     </Paper>
                 )}
+
+                <Dialog
+                    open={openImageDialog}
+                    onClose={handleCloseDialog}
+                    maxWidth="md"
+                    fullWidth
+                >
+                    <DialogContent>
+                        <div className="dialog-content-container">
+                            {/* Image Section */}
+                            <div className="dialog-image-container">
+                                {selectedImage && (
+                                    <img
+                                        src={selectedImage}
+                                        alt="User"
+                                    />
+                                )}
+                            </div>
+
+                            {/* User Details Section */}
+                            <div className="dialog-details-container">
+                                {selectedUserData && (
+                                    <>
+                                        <Typography variant="h6" sx={{ mb: 1, fontWeight: 'bold' }}>
+                                            User Details
+                                        </Typography>
+                                        <Typography><strong>Name:</strong> {selectedUserData.name}</Typography>
+                                        <Typography><strong>Surname:</strong> {selectedUserData.surname}</Typography>
+                                        <Typography><strong>Gothram:</strong> {selectedUserData.gothram}</Typography>
+                                        <Typography><strong>Mobile:</strong> {selectedUserData.mobile}</Typography>
+                                        <Typography><strong>Date of Birth:</strong> {selectedUserData.dob}</Typography>
+                                        <Typography><strong>Gender:</strong> {selectedUserData.gender}</Typography>
+                                        <Typography><strong>Resident Type:</strong> {selectedUserData.residentType}</Typography>
+                                        <Typography><strong>State:</strong> {selectedUserData.state}</Typography>
+                                        <Typography><strong>City:</strong> {selectedUserData.city}</Typography>
+                                        <Typography><strong>Country:</strong> {selectedUserData.country}</Typography>
+                                        <Typography><strong>Address:</strong> {selectedUserData.address}</Typography>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </DialogContent>
+
+                </Dialog>
+
             </div>
             <FooterComp />
         </>

@@ -89,7 +89,7 @@ const addressService = {
 
     getCities: async (stateId) => {
         try {
-            const response = await axiosInstance.get('/address/getCities/cities', {
+            const response = await axiosInstance.get('/address/getCities', {
                 params: { state: stateId }
             });
             return response.data;
