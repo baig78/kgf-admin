@@ -123,7 +123,68 @@ const addressService = {
         } catch (error) {
             throw error.response?.data || error.message;
         }
-    }
+    },
+
+    // Mandal APIs
+    addMandal: async (mandalData) => {
+        try {
+            const response = await axiosInstance.post('/address/addMandal', mandalData);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getMandals: async () => {
+        try {
+            const response = await axiosInstance.get('/address/getMandals');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    // deleteMandal: async (mandalId) => {
+    //     try {
+    //         const response = await axiosInstance.delete('/address/deleteMandal', {
+    //             data: { id: mandalId }
+    //         });
+    //         return response.data;
+    //     } catch (error) {
+    //         throw error.response?.data || error.message;
+    //     }
+    // },
+
+    // Village APIs
+    addVillage: async (villageData) => {
+        try {
+            const response = await axiosInstance.post('/address/addVillage', villageData);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    getVillages: async () => {
+        try {
+            const response = await axiosInstance.get('/address/getVillages');
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error.message;
+        }
+    },
+
+    // deleteVillage: async (villageId) => {
+    //     try {
+    //         const response = await axiosInstance.delete('/address/deleteVillage', {
+    //             data: { id: villageId }
+    //         });
+    //         return response.data;
+    //     } catch (error) {
+    //         throw error.response?.data || error.message;
+    //     }
+    // }
+
 };
 
 // Coordinator services

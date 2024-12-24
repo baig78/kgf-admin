@@ -1,124 +1,145 @@
-/* Navbar.css */
-
+/* General Navbar Styling */
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background-color: #006ae8; /* Dark blue background */
   padding: 10px 20px;
-  background-color: #006ae8; /* Dark background */
-  color: #ffffff; /* White text */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  color: #ffffff;
+  font-family: "Arial", sans-serif;
   position: sticky;
   top: 0;
   z-index: 1000;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
+/* Logo Section */
 .navbar-logo {
   display: flex;
   align-items: center;
-  font-size: 20px;
-  font-weight: bold;
-  color: #ffffff;
+  gap: 10px;
 }
 
 .navbar-logo .logo {
   width: 40px;
   height: 40px;
-  margin-right: 10px;
   border-radius: 50%;
+  object-fit: cover;
 }
 
+.navbar-logo span {
+  font-size: 20px;
+  font-weight: bold;
+  color: #ffffff; /* White for the logo text */
+}
+
+/* Menu Links */
 .navbar-menu {
   display: flex;
   gap: 20px;
-}
-
-.navbar-menu a {
-  color: #ffffff;
-  text-decoration: none;
-  font-size: 16px;
-  transition: color 0.3s ease;
-}
-
-.navbar-menu a:hover {
-  color: #7aadca; /* Highlight color */
-}
-
-.navbar-hamburger {
-  display: none;
-  flex-direction: column;
-  cursor: pointer;
-  gap: 5px;
-}
-
-.navbar-hamburger .line {
-  width: 25px;
-  height: 3px;
-  background-color: #ffffff;
-  transition: all 0.3s ease;
-}
-
-.user-dropdown {
-  position: relative;
-  cursor: pointer;
-  display: flex;
   align-items: center;
 }
 
+.navbar-menu a {
+  text-decoration: none;
+  color: #ffffff; /* White text for links */
+  padding: 8px 15px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  font-size: 16px;
+}
+
+/* Hover Effect for Links */
+.navbar-menu a:hover {
+  background-color: #4c9dff; /* Light blue hover effect */
+  color: #ffffff; /* Keep white text on hover */
+}
+
+/* Active Link Styling */
+.navbar-menu a.active {
+  background-color: #4c9dff; /* Light blue background for active */
+  color: #ffffff; /* White text for active */
+  font-weight: bold;
+}
+
+/* User Dropdown */
+.user-dropdown {
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
 .user-icon {
-  font-size: 24px;
   color: #ffffff;
+  font-size: 24px;
 }
 
 .dropdown-menu {
   position: absolute;
   top: 40px;
   right: 0;
-  background-color: #006ae8;
+  background-color: #ffffff; /* White dropdown menu */
   border-radius: 5px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  width: 150px;
+  animation: fadeIn 0.3s ease;
 }
 
 .dropdown-item {
-  padding: 10px 20px;
-  color: #ffffff;
+  padding: 10px 15px;
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 16px;
+  color: #006ae8; /* Dark blue for dropdown items */
+  font-size: 14px;
+  cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
 .dropdown-item:hover {
-  background-color: #4c9dff;
+  background-color: #f0f0f0;
 }
 
 .logout {
-  color: #ff4d4d;
+  border-top: 1px solid #ddd;
+  font-weight: bold;
+  color: #c41f1f; /* Logout button with warning tone */
 }
 
 .logout-icon {
-  font-size: 20px;
+  color: #c41f1f;
 }
 
-.navbar-menu .active {
-  /* color: #111;  */
-  /* text-decoration: underline; */
-  font-weight: 600;
+/* Hamburger Menu */
+.navbar-hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
 }
 
-/* Responsive Styles */
+.navbar-hamburger .line {
+  width: 25px;
+  height: 3px;
+  background-color: #ffffff; /* White hamburger lines */
+  border-radius: 2px;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
   .navbar-menu {
-    flex-direction: column;
     display: none;
+    flex-direction: column;
+    gap: 10px;
+    background-color: #006ae8;
     position: absolute;
     top: 60px;
-    right: 0;
-    background-color: #201e1f;
-    width: 100%;
-    padding: 10px 0;
+    right: 10px;
+    padding: 15px;
+    border-radius: 5px;
   }
 
   .navbar-menu.open {
@@ -128,40 +149,16 @@
   .navbar-hamburger {
     display: flex;
   }
+}
 
-  .navbar-menu a {
-    padding: 10px 20px;
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
   }
-}
-
-.user-dropdown {
-  position: relative;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-}
-
-.dropdown-menu {
-  position: absolute;
-  top: 40px;
-  right: 0;
-  background-color: #006ae8;
-  border-radius: 5px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  z-index: 10; /* Ensure it appears above other elements */
-}
-
-.dropdown-item {
-  padding: 10px 20px;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 16px;
-  transition: background-color 0.3s ease;
-}
-
-.dropdown-item:hover {
-  background-color: #4c9dff;
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

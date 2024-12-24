@@ -20,8 +20,14 @@ const LocationComponent = () => {
     const [selectedCountryCity, setSelectedCountryCity] = useState('');
     const [selectedCountryState, setSelectedCountryState] = useState('');
     const [countryName, setCountryName] = useState('');
+    const [mandalName, setMandalName] = useState("");
+    const [selectedCity, setSelectedCity] = useState("");
+    const [mandals, setMandals] = useState([]);
+    const [villageName, setVillageName] = useState("");
+    const [selectedMandal, setSelectedMandal] = useState("");
     const [validationErrors, setValidationErrors] = useState({});
-    const [countryAccordionExpanded, setCountryAccordionExpanded] = useState(false);
+    const [villages, setVillages] = useState([]);
+    const [expandedAccordion, setExpandedAccordion] = useState(null); // Track which accordion is open
 
     useEffect(() => {
         fetchCountries();
@@ -139,8 +145,18 @@ const LocationComponent = () => {
         return Object.keys(errors).length === 0;
     };
 
+    const isValidName = (name) => {
+        const regex = /^[a-zA-Z\s]+$/; // Only allows letters and spaces
+        return regex.test(name);
+    };
+
     const createCity = async () => {
         if (!await validateCityData()) return;
+
+        if (!isValidName(cityName)) {
+            setValidationErrors(prev => ({ ...prev, cityName: 'City name must not contain special characters or numbers.' }));
+            return;
+        }
 
         try {
             const cityData = {
@@ -190,6 +206,11 @@ const LocationComponent = () => {
     const createState = async () => {
         if (!await validateStateData()) return;
 
+        if (!isValidName(stateName)) {
+            setValidationErrors(prev => ({ ...prev, stateName: 'State name must not contain special characters or numbers.' }));
+            return;
+        }
+
         try {
             const stateData = {
                 name: stateName.trim(),
@@ -226,6 +247,11 @@ const LocationComponent = () => {
     const createCountry = async () => {
         if (!validateCountryData()) return;
 
+        if (!isValidName(countryName)) {
+            setValidationErrors(prev => ({ ...prev, countryName: 'Country name must not contain special characters or numbers.' }));
+            return;
+        }
+
         try {
             const countryData = { name: countryName.trim() };
             const response = await addressService.addCountry(countryData);
@@ -243,6 +269,142 @@ const LocationComponent = () => {
         }
     };
 
+    const fetchVillages = async (mandalId) => {
+        try {
+            const response = await addressService.getVillages(mandalId); // Fetch villages for a specific mandal
+            setVillages(response);
+        } catch (error) {
+            console.error("Error fetching villages:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchMandals();
+    }, []);
+
+
+    const validateVillageData = async () => {
+        const errors = {};
+        if (!selectedMandal) {
+            errors.mandal = 'Please select a Mandal';
+        }
+        if (!villageName || villageName.trim() === '') {
+            errors.villageName = 'Please enter a village name';
+        } else if (villageName.trim().length < 2) {
+            errors.villageName = 'Village name must be at least 2 characters long';
+        } else {
+            // Check if village already exists in selected mandal
+            const villagesResponse = await addressService.getVillages(selectedMandal);
+            if (villagesResponse.some(village => village.name.toLowerCase() === villageName.trim().toLowerCase())) {
+                errors.villageName = 'This village already exists in the selected mandal';
+            }
+        }
+        setValidationErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
+    const createVillage = async () => {
+        // Validate that a country, state, city, and mandal are selected
+        if (!selectedCountryCity || !selectedState || !selectedCity || !selectedMandal) {
+            setValidationErrors(prev => ({ ...prev, villageName: 'Please select a country, state, city, and mandal before adding a village.' }));
+            return;
+        }
+
+        if (!await validateVillageData()) return;
+
+        if (!isValidName(villageName)) {
+            setValidationErrors(prev => ({ ...prev, villageName: 'Village name must not contain special characters or numbers.' }));
+            return;
+        }
+
+        try {
+            const villageData = [{
+                name: villageName.trim(),
+                mandal: selectedMandal,
+            }];
+            const response = await addressService.addVillage(villageData);
+            if (response.success) {
+                toast.success("Village added successfully!");
+                setVillageName("");
+                setSelectedMandal("");
+                fetchVillages(selectedMandal);
+            } else {
+                throw new Error(response.message || "Failed to add village");
+            }
+        } catch (error) {
+            console.error("Error adding village:", error);
+            toast.error(error.message || "Failed to add village");
+        }
+    };
+
+    const fetchMandals = async (cityId) => {
+        try {
+            const response = await addressService.getMandals(cityId);
+            console.log(response, '-----m')
+            setMandals(response);
+        } catch (error) {
+            console.error("Error fetching mandals:", error);
+        }
+    };
+
+    const validateMandalData = async () => {
+        const errors = {};
+        if (!selectedCity) {
+            errors.city = "Please select a city";
+        } else {
+            // Fetch city details when a city is selected
+            try {
+                const cityDetails = await addressService.getCities(selectedCity);
+                if (!cityDetails) {
+                    errors.city = "Selected city does not exist";
+                }
+            } catch (err) {
+                console.error("Error fetching city details:", err);
+                errors.city = "Error fetching city details";
+            }
+        }
+        if (!mandalName || mandalName.trim() === "") {
+            errors.mandalName = "Please enter a mandal name";
+        } else if (mandalName.trim().length < 2) {
+            errors.mandalName = "Mandal name must be at least 2 characters long";
+        } else {
+            // Check if mandal already exists in selected city
+            const mandalsResponse = await addressService.getMandals(selectedCity);
+            if (mandalsResponse.some(mandal => mandal.name.toLowerCase() === mandalName.trim().toLowerCase())) {
+                errors.mandalName = 'This mandal already exists in the selected city';
+            }
+        }
+        setValidationErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
+    const createMandal = async () => {
+        if (!await validateMandalData()) return;
+
+        if (!isValidName(mandalName)) {
+            setValidationErrors(prev => ({ ...prev, mandalName: 'Mandal name must not contain special characters or numbers.' }));
+            return;
+        }
+
+        try {
+            const mandalData = [{
+                name: mandalName.trim(),
+                city: selectedCity,
+            }];
+            const response = await addressService.addMandal(mandalData);
+            if (response.success) {
+                toast.success("Mandal added successfully!");
+                setMandalName("");
+                fetchMandals(selectedCity);
+            } else {
+                throw new Error(response.message || "Failed to add mandal");
+            }
+        } catch (error) {
+            console.error("Error adding mandal:", error);
+            toast.error(error.message || "Failed to add mandal");
+        }
+    };
+
     const handleCountryChangeForState = (countryId) => {
         setSelectedCountryState(countryId);
         setValidationErrors({});
@@ -257,6 +419,25 @@ const LocationComponent = () => {
     const handleStateChange = (stateId) => {
         setSelectedState(stateId);
         setValidationErrors({});
+    };
+
+    const handleMandalChange = (mandalId) => {
+        setSelectedMandal(mandalId);
+        setValidationErrors({});
+        console.log(mandalId, '-----');
+
+    };
+
+    const handleCityChange = (cityId) => {
+        setSelectedCity(cityId);
+        fetchMandals(cityId);
+    };
+
+    const handleDeleteCountry = (countryName) => {
+        if (window.confirm(`Are you sure you want to delete ${countryName}?`)) {
+            // Add logic to delete the country here
+            console.log(`${countryName} deleted`); // Placeholder for actual delete logic
+        }
     };
 
     return (
@@ -280,7 +461,7 @@ const LocationComponent = () => {
                 )}
 
                 <Box sx={{ mb: 4 }}>
-                    <Accordion expanded={countryAccordionExpanded} onChange={() => setCountryAccordionExpanded(!countryAccordionExpanded)}>
+                    <Accordion expanded={expandedAccordion === 'country'} onChange={() => setExpandedAccordion(expandedAccordion === 'country' ? null : 'country')}>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <Typography variant="h6">Create Country</Typography>
                         </AccordionSummary>
@@ -298,13 +479,21 @@ const LocationComponent = () => {
                                 Submit
                             </Button>
 
-                            {countryAccordionExpanded && (
+                            {expandedAccordion === 'country' && (
                                 <Box sx={{ mt: 4 }}>
                                     <Typography variant="h6" gutterBottom>
                                         All Countries
                                     </Typography>
                                     <Typography>
-                                        {countries.sort((a, b) => a.name.localeCompare(b.name)).map(country => country.name).join(', ')}
+                                        {countries.sort((a, b) => a.name.localeCompare(b.name)).map(country => (
+                                            <span
+                                                key={country.id}
+                                                onClick={() => handleDeleteCountry(country.name)}
+                                                style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline' }}
+                                            >
+                                                {country.name}
+                                            </span>
+                                        )).reduce((prev, curr) => [prev, ', ', curr])}
                                     </Typography>
                                 </Box>
                             )}
@@ -312,7 +501,7 @@ const LocationComponent = () => {
                         </AccordionDetails>
                     </Accordion>
 
-                    <Accordion>
+                    <Accordion expanded={expandedAccordion === 'state'} onChange={() => setExpandedAccordion(expandedAccordion === 'state' ? null : 'state')}>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <Typography variant="h6">Create State</Typography>
                         </AccordionSummary>
@@ -368,7 +557,7 @@ const LocationComponent = () => {
                         </AccordionDetails>
                     </Accordion>
 
-                    <Accordion style={{ marginBottom: '100px' }}>
+                    <Accordion expanded={expandedAccordion === 'city'} onChange={() => setExpandedAccordion(expandedAccordion === 'city' ? null : 'city')}>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <Typography variant="h6">Create City</Typography>
                         </AccordionSummary>
@@ -437,6 +626,219 @@ const LocationComponent = () => {
                                             cities.sort((a, b) => a.name.localeCompare(b.name)).map(city => city.name).join(', ') :
                                             'No cities available for this state'
                                         }
+                                    </Typography>
+                                </Box>
+                            )}
+                        </AccordionDetails>
+                    </Accordion>
+
+                    <Accordion expanded={expandedAccordion === 'mandal'} onChange={() => setExpandedAccordion(expandedAccordion === 'mandal' ? null : 'mandal')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                            <Typography variant="h6">Create Mandal</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <FormControl fullWidth margin="normal">
+                                <InputLabel>Select Country</InputLabel>
+                                <Select
+                                    value={selectedCountryCity || ''}
+                                    onChange={(e) => handleCountryChangeForCity(e.target.value)}
+                                    label="Select Country"
+                                >
+                                    <MenuItem value="">
+                                        <em>None</em>
+                                    </MenuItem>
+                                    {countries.map((country) => (
+                                        <MenuItem key={country.id} value={country.id}>
+                                            {country.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                            <FormControl fullWidth margin="normal" error={!!validationErrors.state}>
+                                <InputLabel>Select State</InputLabel>
+                                <Select
+                                    value={selectedState || ''}
+                                    onChange={(e) => handleStateChange(e.target.value)}
+                                    label="Select State"
+                                >
+                                    <MenuItem value="">
+                                        <em>None</em>
+                                    </MenuItem>
+                                    {states.map((state) => (
+                                        <MenuItem key={state.id} value={state.id}>
+                                            {state.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                                {validationErrors.state && (
+                                    <Typography variant="caption" color="error">
+                                        {validationErrors.state}
+                                    </Typography>
+                                )}
+                            </FormControl>
+
+                            <FormControl fullWidth margin="normal" error={!!validationErrors.city}>
+                                <InputLabel>Select City</InputLabel>
+                                <Select
+                                    value={selectedCity}
+                                    onChange={(e) => {
+                                        setSelectedCity(e.target.value);
+                                        fetchMandals(e.target.value);
+                                    }}
+                                    error={!!validationErrors.city || ''}
+                                >
+                                    <MenuItem value="">
+                                        <em>None</em>
+                                    </MenuItem>
+                                    {cities.map((city) => (
+                                        <MenuItem key={city.id} value={city.id}>
+                                            {city.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                                {validationErrors.city && (
+                                    <Typography variant="caption" color="error">
+                                        {validationErrors.city}
+                                    </Typography>
+                                )}
+                            </FormControl>
+
+                            <TextField
+                                fullWidth
+                                label="Mandal Name"
+                                value={mandalName}
+                                onChange={(e) => setMandalName(e.target.value)}
+                                margin="normal"
+                                error={!!validationErrors.mandalName}
+                                helperText={validationErrors.mandalName}
+                            />
+
+                            <Button variant="contained" onClick={createMandal} sx={{ mt: 2 }}>
+                                Submit
+                            </Button>
+
+                            {selectedCity && (
+                                <Box sx={{ mt: 4 }}>
+                                    <Typography variant="h6" gutterBottom>
+                                        Mandals in Selected City
+                                    </Typography>
+                                    <Typography>
+                                        {mandals.length > 0
+                                            ? mandals
+                                                .filter(mandal => mandal.city === selectedCity)
+                                                .sort((a, b) => a.name.localeCompare(b.name))
+                                                .map((mandal) => mandal.name)
+                                                .join(", ")
+                                            : "No mandals available for this city"}
+                                    </Typography>
+                                </Box>
+                            )}
+                        </AccordionDetails>
+                    </Accordion>
+                    <Accordion expanded={expandedAccordion === 'village'} onChange={() => setExpandedAccordion(expandedAccordion === 'village' ? null : 'village')} style={{ marginBottom: '100px' }}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                            <Typography variant="h6">Create Village</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <FormControl fullWidth margin="normal">
+                                <InputLabel>Select Country</InputLabel>
+                                <Select
+                                    value={selectedCountryCity || ''}
+                                    onChange={(e) => handleCountryChangeForCity(e.target.value)}
+                                    label="Select Country"
+                                >
+                                    <MenuItem value="">
+                                        <em>None</em>
+                                    </MenuItem>
+                                    {countries.map((country) => (
+                                        <MenuItem key={country.id} value={country.id}>
+                                            {country.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                            <FormControl fullWidth margin="normal">
+                                <InputLabel>Select State</InputLabel>
+                                <Select
+                                    value={selectedState || ''}
+                                    onChange={(e) => handleStateChange(e.target.value)}
+                                    label="Select State"
+                                >
+                                    <MenuItem value="">
+                                        <em>None</em>
+                                    </MenuItem>
+                                    {states.map((state) => (
+                                        <MenuItem key={state.id} value={state.id}>
+                                            {state.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                            <FormControl fullWidth margin="normal">
+                                <InputLabel>Select City</InputLabel>
+                                <Select
+                                    value={selectedCity || ''}
+                                    onChange={(e) => handleCityChange(e.target.value)}
+                                    label="Select City"
+                                >
+                                    <MenuItem value="">
+                                        <em>None</em>
+                                    </MenuItem>
+                                    {cities.map((city) => (
+                                        <MenuItem key={city.id} value={city.id}>
+                                            {city.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                            <FormControl fullWidth margin="normal">
+                                <InputLabel>Select Mandal</InputLabel>
+                                <Select
+                                    value={selectedMandal || ''}
+                                    onChange={(e) => handleMandalChange(e.target.value)}
+                                    label="Select Mandal"
+                                >
+                                    <MenuItem value="">
+                                        <em>None</em>
+                                    </MenuItem>
+                                    {mandals.map((mandal) => (
+                                        <MenuItem key={mandal._id} value={mandal._id}>
+                                            {mandal.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                            <TextField
+                                fullWidth
+                                label="Village Name"
+                                value={villageName}
+                                onChange={(e) => setVillageName(e.target.value)}
+                                margin="normal"
+                                error={!!validationErrors.villageName}
+                                helperText={validationErrors.villageName}
+                            />
+
+                            <Button variant="contained" onClick={createVillage} sx={{ mt: 2 }}>
+                                Submit
+                            </Button>
+
+                            {selectedMandal && (
+                                <Box sx={{ mt: 4 }}>
+                                    <Typography variant="h6" gutterBottom>
+                                        Villages in Selected Mandal
+                                    </Typography>
+                                    <Typography>
+                                        {villages.length > 0
+                                            ? villages
+                                                .sort((a, b) => a.name.localeCompare(b.name))
+                                                .map((village) => village.name)
+                                                .join(", ")
+                                            : "No villages available for this mandal"}
                                     </Typography>
                                 </Box>
                             )}

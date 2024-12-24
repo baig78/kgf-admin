@@ -132,7 +132,7 @@ function AddUserAdmin() {
             setFormValues({ name: '', userid: '', role: 'admin', phone: '' });
             toast.success('User Admin added successfully!');
         } catch (err) {
-            toast.error('Failed to add User Admin');
+            toast.error('User Admin Already Exist ');
             console.error(err);
         } finally {
             setLoading(false);
@@ -146,16 +146,33 @@ function AddUserAdmin() {
         }
 
         if (editingIndex !== null) {
+            const selectedRow = filteredData[editingIndex];
+            const { name, phone, role, userid } = formValues;
+
+            // Check if the userid has changed
+            if (selectedRow.userid !== userid) {
+                setFormErrors(prev => ({
+                    ...prev,
+                    userid: 'User ID cannot be changed'
+                }));
+                return; // Exit if userid is changed
+            }
+
+            // Check if the data has changed
+            if (selectedRow.name === name && selectedRow.phone === phone && selectedRow.role === role) {
+                toast.info('No changes made to User Admin.');
+                return; // Exit if no changes
+            }
+
             setLoading(true);
             setError('');
             try {
-                const { name, phone, role, id } = formValues;
                 const payload = { name, phone, role };
-                const response = await coordinatorService.update(id, payload);
+                const response = await coordinatorService.update(selectedRow._id, payload);
+                console.log(response)
 
-                const updatedData = [...formData];
-                updatedData[editingIndex] = response.data;
-                setFormData(updatedData);
+                // Refresh the table data after updating
+                await fetchAllCoordinators(); // Fetch updated data
 
                 setFormValues({ name: '', userid: '', phone: '', role: 'admin' });
                 setEditingIndex(null);

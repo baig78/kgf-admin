@@ -9,6 +9,7 @@ import LocationComponent from './Pages/Location/Location';
 import AddUserAdmin from './Pages/AddUserAdmin/AddUserAdmin';
 import { Provider } from 'react-redux';
 import store from './store';
+import Home from './Pages/Home/Home';
 
 // import Dummy from './Pages/dummy/Dummy';
 
@@ -21,6 +22,7 @@ function App() {
             {/* <Route path="/" element={<WelcomePage />} /> */}
             {/* <Route path="/admin" element={<CoordinatorFormTable />} /> */}
             <Route path="/" element={<Login />} />
+            <Route path="/home" element={<Home />} />
             <Route path="/coordinator" element={<CoordinatorFormTable />} />
             <Route path="/user-list" element={<UserList />} />
             <Route path="/location" element={<LocationComponent />} />

@@ -147,21 +147,38 @@ function CoordinatorFormTable() {
         }
 
         if (editingIndex !== null) {
+            const selectedRow = filteredData[editingIndex];
+            const { name, phone, role, userid } = formValues;
+
+            // Check if the User ID has changed
+            if (selectedRow.userid !== userid) {
+                setFormErrors(prev => ({
+                    ...prev,
+                    userid: 'User ID cannot be changed.' // Set error message for User ID change
+                }));
+                return; // Exit if User ID is changed
+            }
+
+            // Check if the data has changed
+            if (selectedRow.name === name && selectedRow.phone === phone && selectedRow.role === role) {
+                toast.info('No changes made to Coordinator.'); // Inform user that no changes were made
+                return; // Exit if no changes
+            }
+
             setLoading(true);
             setError('');
             try {
-                const { name, phone, role, id } = formValues;
                 const payload = { name, phone, role };
-                const response = await coordinatorService.update(id, payload);
-
-                const updatedData = [...formData];
-                updatedData[editingIndex] = response.data;
-                setFormData(updatedData);
+                const response = await coordinatorService.update(selectedRow._id, payload);
+                setFormData(prevData => {
+                    const updatedData = [...prevData];
+                    updatedData[editingIndex] = response.data;
+                    return updatedData;
+                });
 
                 setFormValues({ name: '', userid: '', phone: '', role: 'coordinator' });
                 setEditingIndex(null);
-                toast.success('Coordinator updated successfully!');
-                setShowForm(false);
+                toast.success('Coordinator updated successfully!'); // This will only show if changes were made
             } catch (err) {
                 setError('Failed to update coordinator');
                 toast.error('Failed to update coordinator');

@@ -8,16 +8,15 @@ const Navbar = () => {
     const [menuOpen, setMenuOpen] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef(null); // Ref to track the dropdown
-
     const navigate = useNavigate();
     const location = useLocation(); // Get the current location (path)
 
     const toggleMenu = () => {
-        setMenuOpen(!menuOpen);
+        setMenuOpen((prev) => !prev);
     };
 
     const toggleDropdown = () => {
-        setDropdownOpen(!dropdownOpen);
+        setDropdownOpen((prev) => !prev);
     };
 
     const handleLogout = () => {
@@ -40,10 +39,16 @@ const Navbar = () => {
         };
     }, []);
 
-    const userName = localStorage.getItem('name'); // Replace with dynamic username if available        
+    const userName = localStorage.getItem('name'); // Replace with dynamic username if available
+
     // Function to check if the link is active
     const isActive = (path) => {
         return location.pathname === path ? 'active' : '';
+    };
+
+    // Close menu on link click (for smaller screens)
+    const handleMenuItemClick = () => {
+        setMenuOpen(false);
     };
 
     return (
@@ -57,10 +62,41 @@ const Navbar = () => {
                 <span>KGF Admin</span>
             </div>
             <div className={`navbar-menu ${menuOpen ? 'open' : ''}`}>
-                <Link to="/location" className={isActive('/location')}>Location</Link>
-                <Link to="/add-user-admin" className={isActive('/add-user-admin')}>User Admin</Link>
-                <Link to="/coordinator" className={isActive('/coordinator')}>Coordinators</Link>
-                <Link to="/user-list" className={isActive('/user-list')}>User List</Link>
+                <Link
+                    to="/home"
+                    className={isActive('/home')}
+                    onClick={handleMenuItemClick} // Close menu on click
+                >
+                    Home
+                </Link>
+                <Link
+                    to="/location"
+                    className={isActive('/location')}
+                    onClick={handleMenuItemClick} // Close menu on click
+                >
+                    Location
+                </Link>
+                <Link
+                    to="/add-user-admin"
+                    className={isActive('/add-user-admin')}
+                    onClick={handleMenuItemClick} // Close menu on click
+                >
+                    User Admin
+                </Link>
+                <Link
+                    to="/coordinator"
+                    className={isActive('/coordinator')}
+                    onClick={handleMenuItemClick} // Close menu on click
+                >
+                    Coordinators
+                </Link>
+                <Link
+                    to="/user-list"
+                    className={isActive('/user-list')}
+                    onClick={handleMenuItemClick} // Close menu on click
+                >
+                    User List
+                </Link>
                 {/* User Dropdown */}
                 <div
                     className="user-dropdown"
