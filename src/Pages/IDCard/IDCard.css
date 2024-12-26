@@ -1,0 +1,139 @@
+.card-front {
+  width: 363px;
+  height: 229px;
+  border: 1px solid #000;
+  font-family: Arial, sans-serif;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #006a4e;
+    color: white;
+    padding: 5px;
+  }
+
+  .logo {
+    width: 60px;
+    height: 60px;
+  }
+  .title {
+    margin-left: 0px;
+    margin-top: 0px;
+  }
+  .title h1 {
+    margin: 0;
+    font-size: 25px;
+    color: #fff;
+    text-align: center;
+  }
+
+  .title h2 {
+    margin: 0;
+    font-size: 18px;
+    color: #fff;
+    text-align: center;
+  }
+
+  .photo {
+    width: 60px;
+    height: 60px;
+    border: 1px solid #000;
+    text-align: center;
+    line-height: 60px;
+  }
+  .section-details {
+    display: flex;
+    justify-content: space-between;
+    .details {
+      padding: 10px;
+      width: 175px;
+
+      span {
+        font-size: 12px;
+      }
+    }
+  }
+
+  .row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .signature-section {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 3px 10px 10px;
+    text-align: center;
+    margin-top: -16px;
+
+    p {
+      margin: 0px;
+      font-size: 8px;
+    }
+  }
+
+  .qr-code {
+    width: 60px;
+    height: 60px;
+    margin-top: 10px;
+    margin-right: 3px;
+  }
+
+  .signature img {
+    width: 60px;
+  }
+
+  .footer-idcard {
+    text-align: center;
+    background-color: #006a4e;
+    color: #ffffff;
+    font-size: 13px;
+  }
+}
+
+/* back back */
+
+.card-back {
+  width: 363px;
+  height: 229px;
+  border: 1px solid #000;
+  font-family: Arial, sans-serif;
+  background-color: #ffffffc9;
+
+  .note-section {
+    background-color: #006a4ea3;
+    color: white;
+    padding: 30px;
+  }
+
+  .note-section span {
+    margin: 0;
+    font-size: 14px;
+  }
+
+  .note-section ol {
+    margin: 0;
+    padding: 0 15px;
+    /* list-style-type: disc; */
+    font-size: 13px;
+  }
+
+  .contact-section {
+    text-align: center;
+    padding: 30px;
+    font-size: 10px;
+    text-align: left;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  .contact-section h4 {
+    margin: 0;
+    font-size: 12px;
+    font-weight: bold;
+  }
+}

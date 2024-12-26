@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { DataGrid, GridActionsCellItem, GridToolbarQuickFilter, GridToolbarContainer, GridToolbarFilterButton } from '@mui/x-data-grid';
 import { Paper, Button, Box, Dialog, DialogContent, Typography } from '@mui/material';
-import { Delete as DeleteIcon, Download as DownloadIcon, PictureAsPdf as PictureAsPdfIcon } from '@mui/icons-material';
+import { Download as DownloadIcon, PictureAsPdf as PictureAsPdfIcon } from '@mui/icons-material';
 import Navbar from '../../Components/Navbar/Navbar';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -10,6 +10,8 @@ import './UserList.css';
 import FooterComp from '../../Components/FooterComp/FooterComp';
 import { userService } from '../../service';
 import { TailSpin } from 'react-loader-spinner';
+import html2pdf from 'html2pdf.js';
+import CardFront from '../IDCard/IDCard';
 
 export default function UserList() {
 
@@ -22,6 +24,8 @@ export default function UserList() {
     const [selectedImage, setSelectedImage] = useState(null);
     const [selectedUserData, setSelectedUserData] = useState(null);
     const [openImageDialog, setOpenImageDialog] = useState(false);
+    const [cardDetails, setCardDetails] = useState({});
+    const [showCard, setShowCard] = useState(false);
 
     // Fetch user data from API
     const getAllUsersData = useCallback(async () => {
@@ -59,9 +63,7 @@ export default function UserList() {
         getAllUsersData();
     }, [getAllUsersData]);
 
-    const handleDeleteClick = (id) => {
-        setData((prevData) => prevData.filter((row) => row.id !== id));
-    };
+
 
     const handleImageClick = (imageUrl, rowData) => {
         setSelectedImage(imageUrl);
@@ -119,6 +121,28 @@ export default function UserList() {
         doc.save("user_data.pdf");
     };
 
+    const handleDownloadCardFront = (userData) => {
+        console.log(userData, '-------------userData');
+        setCardDetails(userData);
+        setShowCard(true);
+        downloadPDF(userData);
+    };
+
+
+    const cardRef = useRef(null);
+
+    const downloadPDF = (userData) => {
+        const element = cardRef.current;
+        const options = {
+            margin: 0,
+            filename: "ID_card.pdf",
+            image: { type: "jpeg", quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+        };
+        html2pdf().set(options).from(element).save();
+    };
+
     const columns = [
         {
             field: 'photo',
@@ -151,13 +175,15 @@ export default function UserList() {
             headerName: 'Actions',
             width: 150,
             getActions: (params) => [
-                <GridActionsCellItem icon={<DeleteIcon />} label="Delete" onClick={() => handleDeleteClick(params.id)} />,
+                <GridActionsCellItem icon={<DownloadIcon />} label="Download Card Front" onClick={() => handleDownloadCardFront(params.row)} />,
+
             ],
         },
     ];
 
     function CustomToolbar() {
         return (
+
             <GridToolbarContainer sx={{ justifyContent: 'flex-end' }}>
                 <GridToolbarFilterButton />
                 <GridToolbarQuickFilter />
@@ -182,6 +208,12 @@ export default function UserList() {
 
     return (
         <>
+            {showCard && (
+                <div ref={cardRef} style={{}}>
+                    <CardFront cardDetails={cardDetails} />
+                </div>
+            )}
+
             <Navbar />
             <div className='user-list'>
                 <Box display="flex" justifyContent="space-between" mb={2}>

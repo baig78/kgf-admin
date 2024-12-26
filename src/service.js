@@ -144,18 +144,6 @@ const addressService = {
         }
     },
 
-    // deleteMandal: async (mandalId) => {
-    //     try {
-    //         const response = await axiosInstance.delete('/address/deleteMandal', {
-    //             data: { id: mandalId }
-    //         });
-    //         return response.data;
-    //     } catch (error) {
-    //         throw error.response?.data || error.message;
-    //     }
-    // },
-
-    // Village APIs
     addVillage: async (villageData) => {
         try {
             const response = await axiosInstance.post('/address/addVillage', villageData);
@@ -174,17 +162,45 @@ const addressService = {
         }
     },
 
-    // deleteVillage: async (villageId) => {
-    //     try {
-    //         const response = await axiosInstance.delete('/address/deleteVillage', {
-    //             data: { id: villageId }
-    //         });
-    //         return response.data;
-    //     } catch (error) {
-    //         throw error.response?.data || error.message;
-    //     }
-    // }
+    deleteCountry: async (countryId) => {
+        try {
+            const response = await axiosInstance.delete(`/address/deleteCountry/${countryId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Error deleting country:", error);
+            throw error;
+        }
+    },
 
+    deleteState: async (stateId) => {
+        try {
+            const response = await axiosInstance.delete(`/address/deleteState/${stateId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Error deleting state:", error);
+            throw error;
+        }
+    },
+
+    deleteVillage: async (villageId) => {
+        try {
+            const response = await axiosInstance.delete(`/address/deleteVillage/${villageId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Error deleting village:", error);
+            throw error;
+        }
+    },
+
+    deleteMandal: async (mandalId) => {
+        try {
+            const response = await axiosInstance.delete(`/address/deleteMandal/${mandalId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Error deleting mandal:", error);
+            throw error;
+        }
+    },
 };
 
 // Coordinator services
