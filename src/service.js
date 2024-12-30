@@ -164,7 +164,9 @@ const addressService = {
 
     deleteCountry: async (countryId) => {
         try {
-            const response = await axiosInstance.delete(`/address/deleteCountry/${countryId}`);
+            const response = await axiosInstance.delete(`/address/deleteCountry`, {
+                data: { id: countryId },
+            });
             return response.data;
         } catch (error) {
             console.error("Error deleting country:", error);
@@ -172,19 +174,35 @@ const addressService = {
         }
     },
 
+
     deleteState: async (stateId) => {
         try {
-            const response = await axiosInstance.delete(`/address/deleteState/${stateId}`);
+            const response = await axiosInstance.delete(`/address/deleteState`, {
+                data: { id: stateId },
+            });
             return response.data;
         } catch (error) {
             console.error("Error deleting state:", error);
             throw error;
         }
     },
+    deleteCity: async (cityId) => {
+        try {
+            const response = await axiosInstance.delete(`/address/deleteCity`, {
+                data: { id: cityId },
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Error deleting city:", error);
+            throw error;
+        }
+    },
 
     deleteVillage: async (villageId) => {
         try {
-            const response = await axiosInstance.delete(`/address/deleteVillage/${villageId}`);
+            const response = await axiosInstance.delete(`/address/deleteVillage`, {
+                data: { id: villageId },
+            });
             return response.data;
         } catch (error) {
             console.error("Error deleting village:", error);
@@ -194,7 +212,9 @@ const addressService = {
 
     deleteMandal: async (mandalId) => {
         try {
-            const response = await axiosInstance.delete(`/address/deleteMandal/${mandalId}`);
+            const response = await axiosInstance.delete(`/address/deleteMandal`, {
+                data: { id: mandalId },
+            });
             return response.data;
         } catch (error) {
             console.error("Error deleting mandal:", error);

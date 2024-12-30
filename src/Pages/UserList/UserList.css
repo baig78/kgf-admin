@@ -101,3 +101,8 @@
   max-height: 100%;
   overflow-y: auto;
 }
+
+.css-1awsx0u-MuiDataGrid-root .MuiDataGrid-container--top [role="row"],
+.css-1awsx0u-MuiDataGrid-root .MuiDataGrid-container--bottom [role="row"] {
+  background: #f4f4f4 !important;
+}

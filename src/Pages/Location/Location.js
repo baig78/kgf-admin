@@ -31,11 +31,16 @@ const LocationComponent = () => {
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
     const [countryToDelete, setCountryToDelete] = useState(null);
     const [openDeleteStateDialog, setOpenDeleteStateDialog] = useState(false);
+    const [openDeleteCityDialog, setOpenDeleteCityDialog] = useState(false);
     const [stateToDelete, setStateToDelete] = useState(null);
+    const [cityToDelete, setCityToDelete] = useState(null);
     const [openDeleteVillageDialog, setOpenDeleteVillageDialog] = useState(false);
     const [villageToDelete, setVillageToDelete] = useState(null);
     const [openDeleteMandalDialog, setOpenDeleteMandalDialog] = useState(false);
     const [mandalToDelete, setMandalToDelete] = useState(null);
+    const [cityMandals, setCityMandals] = useState([]);
+    const [cityVillages, setCityVillages] = useState([]);
+
 
     useEffect(() => {
         fetchCountries();
@@ -278,6 +283,8 @@ const LocationComponent = () => {
     };
 
     const fetchVillages = async (mandalId) => {
+        const filteredVillages = villages.filter((villages: any) => villages.mandal === mandalId);
+        setCityVillages(filteredVillages);
         try {
             const response = await addressService.getVillages(mandalId); // Fetch villages for a specific mandal
             setVillages(response);
@@ -286,9 +293,9 @@ const LocationComponent = () => {
         }
     };
 
-    useEffect(() => {
-        fetchMandals();
-    }, []);
+    // useEffect(() => {
+    //     fetchMandals();
+    // }, []);
 
 
     const validateVillageData = async () => {
@@ -346,6 +353,8 @@ const LocationComponent = () => {
     };
 
     const fetchMandals = async (cityId) => {
+        const filteredMandals = mandals.filter((mandal: any) => mandal.city === cityId);
+        setCityMandals(filteredMandals);
         try {
             const response = await addressService.getMandals(cityId);
             console.log(response, '-----m')
@@ -432,8 +441,7 @@ const LocationComponent = () => {
     const handleMandalChange = (mandalId) => {
         setSelectedMandal(mandalId);
         setValidationErrors({});
-        console.log(mandalId, '-----');
-
+        fetchVillages(mandalId);
     };
 
     const handleCityChange = (cityId) => {
@@ -452,19 +460,27 @@ const LocationComponent = () => {
             if (!countryId) {
                 throw new Error('Country ID not found');
             }
-            await addressService.deleteCountry(countryId);
+            const response = await addressService.deleteCountry(countryId);
+            console.log('Delete response:', response); // Debugging
             toast.success(`${countryToDelete} deleted successfully!`);
-            fetchCountries(); // Refresh the country list after deletion
+            setCountries(prevCountries => prevCountries.filter(country => country.id !== countryId)); // Optimistic update
+            await fetchCountries(); // Ensure the state reflects backend changes
         } catch (error) {
+            console.error(error);
             toast.error('Failed to delete country. Please try again.');
         } finally {
             setOpenDeleteDialog(false);
         }
     };
 
+
     const handleDeleteState = (stateName) => {
         setStateToDelete(stateName);
         setOpenDeleteStateDialog(true);
+    };
+    const handleDeleteCity = (cityName) => {
+        setCityToDelete(cityName);
+        setOpenDeleteCityDialog(true);
     };
 
     const handleConfirmDeleteState = async () => {
@@ -481,6 +497,22 @@ const LocationComponent = () => {
             toast.error('Failed to delete state. Please try again.');
         } finally {
             setOpenDeleteStateDialog(false);
+        }
+    };
+    const handleConfirmDeleteCity = async () => {
+        try {
+            const cityId = cities.find(city => city.name === cityToDelete)?.id; // Use optional chaining
+            if (!cityId) {
+                throw new Error('City ID not found');
+            }
+            await addressService.deleteCity(cityId);
+            toast.success(`${cityToDelete} deleted successfully!`);
+            fetchCities(); // Refresh the state list after deletion
+        } catch (error) {
+            console.error("Error during city deletion:", error);
+            toast.error('Failed to delete city. Please try again.');
+        } finally {
+            setOpenDeleteCityDialog(false);
         }
     };
 
@@ -628,7 +660,7 @@ const LocationComponent = () => {
                                 error={!!validationErrors.stateName}
                                 helperText={validationErrors.stateName}
                             />
-                            <Button variant="contained" onClick={createState} sx={{ mt: 2 }}>
+                            <Button variant="contained" onClick={createState} sx={{ mt: 2 }} disabled={!selectedCountryState}>
                                 Submit
                             </Button>
 
@@ -724,7 +756,7 @@ const LocationComponent = () => {
                                             cities.sort((a, b) => a.name.localeCompare(b.name)).map(city => (
                                                 <span
                                                     key={city.id}
-                                                    //  onClick={() => handleDeleteCity(city.name)}
+                                                    onClick={() => handleDeleteCity(city.name)}
                                                     style={{ cursor: 'pointer', color: 'black', textDecoration: 'none', marginRight: '8px' }}
                                                 >
                                                     {city.name}
@@ -786,12 +818,12 @@ const LocationComponent = () => {
                             <FormControl fullWidth margin="normal" error={!!validationErrors.city}>
                                 <InputLabel>Select City</InputLabel>
                                 <Select
-                                    value={selectedCity}
+                                    value={selectedCity || ''}
                                     onChange={(e) => {
-                                        setSelectedCity(e.target.value);
-                                        fetchMandals(e.target.value);
+                                        handleCityChange(e.target.value);
+                                        setSelectedMandal(''); // Reset selected Mandal when city changes
                                     }}
-                                    error={!!validationErrors.city || ''}
+                                    label="Select City"
                                 >
                                     <MenuItem value="">
                                         <em>None</em>
@@ -829,8 +861,8 @@ const LocationComponent = () => {
                                         Mandals in Selected City
                                     </Typography>
                                     <Typography>
-                                        {mandals.length > 0 ?
-                                            mandals.sort((a, b) => a.name.localeCompare(b.name)).map(mandal => (
+                                        {cityMandals.length > 0 ?
+                                            cityMandals.sort((a, b) => a.name.localeCompare(b.name)).map(mandal => (
                                                 <span
                                                     key={mandal._id}
                                                     onClick={() => handleDeleteMandal(mandal.name)}
@@ -914,7 +946,7 @@ const LocationComponent = () => {
                                     <MenuItem value="">
                                         <em>None</em>
                                     </MenuItem>
-                                    {mandals.map((mandal) => (
+                                    {cityMandals.map((mandal) => (
                                         <MenuItem key={mandal._id} value={mandal._id}>
                                             {mandal.name}
                                         </MenuItem>
@@ -942,18 +974,19 @@ const LocationComponent = () => {
                                         Villages in Selected Mandal
                                     </Typography>
                                     <Typography>
-                                        {villages.length > 0 ?
-                                            villages.sort((a, b) => a.name.localeCompare(b.name)).map(village => (
+                                        {cityVillages.length > 0 ?
+                                            cityVillages.sort((a, b) => a.name.localeCompare(b.name)).map(village => (
                                                 <span
-                                                    key={village.id}
+                                                    key={village._id}
                                                     onClick={() => handleDeleteVillage(village.name)}
                                                     style={{ cursor: 'pointer', color: 'black', textDecoration: 'none', marginRight: '8px' }}
                                                 >
                                                     {village.name}
                                                 </span>
                                             )).reduce((prev, curr) => [prev, ', ', curr])
-                                            : 'No villages available for this mandal'}
+                                            : 'No villages available for this city'}
                                     </Typography>
+
                                 </Box>
                             )}
                         </AccordionDetails>
@@ -990,6 +1023,22 @@ const LocationComponent = () => {
                         Cancel
                     </Button>
                     <Button onClick={handleConfirmDeleteState} color="primary">
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog open={openDeleteCityDialog} onClose={() => setOpenDeleteCityDialog(false)}>
+                <DialogTitle>Confirm Deletion</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to delete {cityToDelete}?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenDeleteCityDialog(false)} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleConfirmDeleteCity} color="primary">
                         Delete
                     </Button>
                 </DialogActions>

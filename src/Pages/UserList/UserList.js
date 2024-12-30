@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { DataGrid, GridActionsCellItem, GridToolbarQuickFilter, GridToolbarContainer, GridToolbarFilterButton } from '@mui/x-data-grid';
-import { Paper, Button, Box, Dialog, DialogContent, Typography } from '@mui/material';
-import { Download as DownloadIcon, PictureAsPdf as PictureAsPdfIcon } from '@mui/icons-material';
+import { Paper, Button, Box, Dialog, DialogContent, Typography, IconButton } from '@mui/material';
+import { Download as DownloadIcon, PictureAsPdf as PictureAsPdfIcon, Visibility as ViewIcon, Close as CloseIcon } from '@mui/icons-material';
 import Navbar from '../../Components/Navbar/Navbar';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -21,11 +21,12 @@ export default function UserList() {
     const [filteredRows, setFilteredRows] = useState([]);
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [openImageDialog, setOpenImageDialog] = useState(false);
+    const [openCardDialog, setopenCardDialog] = useState(false);
+    const [cardDetails, setCardDetails] = useState({});
     const [selectedImage, setSelectedImage] = useState(null);
     const [selectedUserData, setSelectedUserData] = useState(null);
-    const [openImageDialog, setOpenImageDialog] = useState(false);
-    const [cardDetails, setCardDetails] = useState({});
-    const [showCard, setShowCard] = useState(false);
+    // const [showCard, setShowCard] = useState(false);
 
     // Fetch user data from API
     const getAllUsersData = useCallback(async () => {
@@ -73,6 +74,7 @@ export default function UserList() {
 
     const handleCloseDialog = () => {
         setOpenImageDialog(false);
+        setopenCardDialog(false);
         setSelectedImage(null);
         setSelectedUserData(null);
     };
@@ -121,12 +123,12 @@ export default function UserList() {
         doc.save("user_data.pdf");
     };
 
-    const handleDownloadCardFront = (userData) => {
-        console.log(userData, '-------------userData');
-        setCardDetails(userData);
-        setShowCard(true);
-        downloadPDF(userData);
-    };
+    // const handleDownloadCardFront = (userData) => {
+    //     console.log(userData, '-------------userData');
+    //     setCardDetails(userData);
+    //     setShowCard(true);
+    //     downloadPDF(userData);
+    // };
 
 
     const cardRef = useRef(null);
@@ -141,6 +143,12 @@ export default function UserList() {
             jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
         };
         html2pdf().set(options).from(element).save();
+    };
+
+    const handleViewCard = (userData) => {
+        setCardDetails(userData);
+        // setShowCard(true);
+        setopenCardDialog(true); // Open the dialog
     };
 
     const columns = [
@@ -172,11 +180,10 @@ export default function UserList() {
         {
             field: 'actions',
             type: 'actions',
-            headerName: 'Actions',
+            headerName: 'View ID Card',
             width: 150,
             getActions: (params) => [
-                <GridActionsCellItem icon={<DownloadIcon />} label="Download Card Front" onClick={() => handleDownloadCardFront(params.row)} />,
-
+                <GridActionsCellItem icon={<ViewIcon />} label="View Card" onClick={() => handleViewCard(params.row)} />,
             ],
         },
     ];
@@ -208,12 +215,6 @@ export default function UserList() {
 
     return (
         <>
-            {showCard && (
-                <div ref={cardRef} style={{}}>
-                    <CardFront cardDetails={cardDetails} />
-                </div>
-            )}
-
             <Navbar />
             <div className='user-list'>
                 <Box display="flex" justifyContent="space-between" mb={2}>
@@ -280,12 +281,52 @@ export default function UserList() {
                 )}
 
                 <Dialog
+                    open={openCardDialog}
+                    onClose={handleCloseDialog}
+                    maxWidth="md"
+                    fullWidth
+                >
+                    <DialogContent>
+                        <IconButton
+                            edge="end"
+                            color="inherit"
+                            onClick={handleCloseDialog}
+                            aria-label="close"
+                            style={{ position: 'absolute', right: 20, top: 8 }}
+                        >
+                            <CloseIcon />
+                        </IconButton>
+                        <div className="dialog-content-container" ref={cardRef} style={{ padding: '20px' }}>
+                            <CardFront cardDetails={cardDetails} />
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+                            <Button
+                                variant="contained"
+                                onClick={() => downloadPDF(cardDetails)}
+                                style={{ backgroundColor: '#3f51b5', color: '#fff' }}
+                            >
+                                Download ID Card
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+
+                <Dialog
                     open={openImageDialog}
                     onClose={handleCloseDialog}
                     maxWidth="md"
                     fullWidth
                 >
                     <DialogContent>
+                        <IconButton
+                            edge="end"
+                            color="inherit"
+                            onClick={handleCloseDialog}
+                            aria-label="close"
+                            style={{ position: 'absolute', right: 20, top: 8 }}
+                        >
+                            <CloseIcon />
+                        </IconButton>
                         <div className="dialog-content-container">
                             {/* Image Section */}
                             <div className="dialog-image-container">
@@ -296,7 +337,6 @@ export default function UserList() {
                                     />
                                 )}
                             </div>
-
                             {/* User Details Section */}
                             <div className="dialog-details-container">
                                 {selectedUserData && (
@@ -320,7 +360,6 @@ export default function UserList() {
                             </div>
                         </div>
                     </DialogContent>
-
                 </Dialog>
 
             </div>
