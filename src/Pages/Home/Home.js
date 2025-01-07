@@ -1,54 +1,149 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Navbar from '../../Components/Navbar/Navbar';
 import FooterComp from '../../Components/FooterComp/FooterComp';
 import { userService } from '../../service';
 import './Home.css';
+import { TailSpin } from 'react-loader-spinner';
+import { toast } from 'react-toastify';
+import {
+    Typography,
+    Grid,
+    Paper,
+    Button,
+    Box
+} from '@mui/material';
 
 const Home = () => {
     const [registrations, setRegistrations] = useState({ total: 0, countries: {} });
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const userList = {};
-
-    useEffect(() => {
-        const fetchData = async () => {
+    const fetchData = async () => {
+        try {
+            setLoading(true);
             const response = await userService.getAllUsers();
             const users = response.data;
             const totalUsers = response.metadata.totalUsers;
 
-            const countriesCount = {};
-            users.forEach(user => {
-                const country = user.country;
-                countriesCount[country] = (countriesCount[country] || 0) + 1;
-            });
+            const countriesCount = users.reduce((acc, user) => {
+                const country = user.country || 'Unknown';
+                acc[country] = (acc[country] || 0) + 1;
+                return acc;
+            }, {});
 
             setRegistrations({ total: totalUsers, countries: countriesCount });
-        };
+
+        } catch (err) {
+            console.error('Error fetching user data:', err);
+            setError('Failed to load registration data. Please try again.');
+            toast.error('Unable to fetch registration details');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchData();
     }, []);
 
+    // Memoize sorted countries for performance
+    const sortedCountries = useMemo(() =>
+        Object.entries(registrations.countries)
+            .sort((a, b) => b[1] - a[1]),
+        [registrations.countries]
+    );
+
+    // Loading State
+    if (loading) {
+        return (
+            <div className='home-page'>
+                <Navbar />
+                <Box
+                    display="flex"
+                    justifyContent="center"
+                    alignItems="center"
+                    height="calc(100vh - 64px)"
+                >
+                    <TailSpin
+                        height="80"
+                        width="80"
+                        color="#4fa94d"
+                        ariaLabel="Loading registration data"
+                        radius="1"
+                        visible={true}
+                    />
+                </Box>
+            </div>
+        );
+    }
+
+    // Error State
+    if (error) {
+        return (
+            <div className='home-page'>
+                <Navbar />
+                <Box
+                    display="flex"
+                    flexDirection="column"
+                    justifyContent="center"
+                    alignItems="center"
+                    height="calc(100vh - 64px)"
+                    textAlign="center"
+                    p={3}
+                >
+                    <Typography variant="h5" color="error" gutterBottom>
+                        {error}
+                    </Typography>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={fetchData}
+                    >
+                        Try Again
+                    </Button>
+                </Box>
+            </div>
+        );
+    }
+
+    // Main Content
     return (
         <div className='home-page'>
             <Navbar />
-            <div className="container">
-                <h1>Total Registrations: {registrations.total}</h1>
-                <h2>Country-wise Registration Count:</h2>
-                <div className="cards-container">
-                    {registrations.countries &&
-                        Object.entries(registrations.countries).map(([country, count]) => (
-                            <div className="card" key={country}>
-                                <h3>{country}</h3>
-                                <p>Registrations: {count}</p>
-                                <ul>
-                                    {userList[country]
-                                        ? userList[country].map((user, index) => (
-                                            <li key={index}>{user}</li>
-                                        ))
-                                        : null}
-                                </ul>
-                            </div>
-                        ))}
-                </div>
-            </div>
+            <Box className="container" p={3}>
+                <Typography variant="h4" gutterBottom>
+                    Total Registrations: {registrations.total}
+                </Typography>
+
+                <Typography variant="h5" sx={{ mt: 3, mb: 2 }}>
+                    Country-wise Registration Count
+                </Typography>
+
+                <Grid container spacing={3}>
+                    {sortedCountries.map(([country, count]) => (
+                        <Grid item xs={12} sm={6} md={4} key={country}>
+                            <Paper
+                                elevation={3}
+                                sx={{
+                                    p: 2,
+                                    textAlign: 'center',
+                                    transition: 'transform 0.3s',
+                                    '&:hover': {
+                                        transform: 'scale(1.05)'
+                                    }
+                                }}
+                            >
+                                <Typography variant="h6" color="primary">
+                                    {country}
+                                </Typography>
+                                <Typography variant="body1">
+                                    Registrations: {count}
+                                </Typography>
+                            </Paper>
+                        </Grid>
+                    ))}
+                </Grid>
+            </Box>
             <FooterComp />
         </div>
     );

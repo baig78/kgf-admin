@@ -11,6 +11,11 @@ import {
     TextField,
     TableSortLabel,
     TablePagination,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions,
 } from '@mui/material';
 import './AddUserAdmin.css';
 import Navbar from '../../Components/Navbar/Navbar';
@@ -42,6 +47,8 @@ function AddUserAdmin() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [showForm, setShowForm] = useState(false);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [userAdminToDelete, setUserAdminToDelete] = useState(null);
 
     useEffect(() => {
         fetchAllCoordinators();
@@ -208,20 +215,34 @@ function AddUserAdmin() {
         setShowForm(true);
     };
 
-    const handleDelete = async (id) => {
-        setLoading(true);
-        setError('');
+    const handleDeleteClick = (userAdmin) => {
+        setUserAdminToDelete(userAdmin);
+        setDeleteConfirmOpen(true);
+    };
+
+    const handleDeleteConfirmed = async () => {
         try {
-            await coordinatorService.delete(id);
-            toast.success('User Admin deleted successfully!');
+            const userAdminId = userAdminToDelete._id;
+            if (!userAdminId) {
+                throw new Error('User Admin ID not found');
+            }
+            await coordinatorService.delete(userAdminId);
+            toast.success(`${userAdminToDelete.name} deleted successfully!`);
+            
+            // Refresh the list of user admins
             await fetchAllCoordinators();
-        } catch (err) {
-            setError('Failed to delete User Admin');
-            toast.error('Failed to delete User Admin');
-            console.error(err);
+        } catch (error) {
+            console.error('Delete Error:', error);
+            toast.error('Failed to delete user admin. Please try again.');
         } finally {
-            setLoading(false);
+            setDeleteConfirmOpen(false);
+            setUserAdminToDelete(null);
         }
+    };
+
+    const handleDeleteCancel = () => {
+        setDeleteConfirmOpen(false);
+        setUserAdminToDelete(null);
     };
 
     const handleReset = () => {
@@ -274,9 +295,16 @@ function AddUserAdmin() {
             <div className="title">Admin List</div>
             <div className="coordinator-form-table">
                 <div className="coordinator-form">
-                    <div
-                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                    <div 
+                        role="button" 
+                        tabIndex={0} 
                         onClick={() => setShowForm(!showForm)}
+                        onKeyPress={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                setShowForm(!showForm);
+                            }
+                        }}
+                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                     >
                         <h3 style={{ marginRight: '10px' }}>
                             {editingIndex !== null ? 'Edit Admin User' : 'Add Admin User'}
@@ -383,7 +411,7 @@ function AddUserAdmin() {
                                                 <Button onClick={() => handleEdit(page * rowsPerPage + index)}>
                                                     <Edit />
                                                 </Button>
-                                                <Button onClick={() => handleDelete(row._id)}>
+                                                <Button onClick={() => handleDeleteClick(row)}>
                                                     <Delete />
                                                 </Button>
                                             </TableCell>
@@ -405,6 +433,27 @@ function AddUserAdmin() {
             </div>
             <FooterComp />
             <ToastContainer />
+            <Dialog
+                open={deleteConfirmOpen}
+                onClose={handleDeleteCancel}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">
+                    {"Delete User Admin?"}
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        Are you sure you want to delete {userAdminToDelete && userAdminToDelete.name}?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleDeleteCancel}>Cancel</Button>
+                    <Button onClick={handleDeleteConfirmed} color="error" variant="contained">
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 }

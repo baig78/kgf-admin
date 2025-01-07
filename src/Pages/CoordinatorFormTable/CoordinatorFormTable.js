@@ -12,7 +12,12 @@ import {
     TableSortLabel,
     TablePagination,
     MenuItem,
-    Select
+    Select,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle
 } from '@mui/material';
 import './CoordinatorFormTable.css';
 import Navbar from '../../Components/Navbar/Navbar';
@@ -36,7 +41,9 @@ function CoordinatorFormTable() {
     const [formErrors, setFormErrors] = useState({
         name: '',
         userid: '',
-        phone: ''
+        phone: '',
+        mandal: '',
+        village: ''
     });
     const [order, setOrder] = useState('asc');
     const [orderBy, setOrderBy] = useState('name');
@@ -50,6 +57,8 @@ function CoordinatorFormTable() {
     const [selectedMandal, setSelectedMandal] = useState('');
     const [villages, setVillages] = useState([]);
     const [selectedVillage, setSelectedVillage] = useState('');
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [coordinatorToDelete, setCoordinatorToDelete] = useState(null);
 
     useEffect(() => {
         fetchAllCoordinators();
@@ -127,7 +136,6 @@ function CoordinatorFormTable() {
         const error = validateField(name, value);
         setFormErrors(prev => ({ ...prev, [name]: error }));
     };
-
 
     const isFormValid = () => {
         const errors = {
@@ -230,25 +238,54 @@ function CoordinatorFormTable() {
         setShowForm(true);
     };
 
-    const handleDelete = async (id) => {
-        setLoading(true);
-        setError('');
+    const handleDeleteClick = (coordinator) => {
+        setCoordinatorToDelete(coordinator);
+        setDeleteConfirmOpen(true);
+    };
+
+    const handleDeleteConfirmed = async () => {
         try {
-            await coordinatorService.delete(id);
-            toast.success('Coordinator deleted successfully!');
+            const coordinatorId = coordinatorToDelete._id;
+            if (!coordinatorId) {
+                throw new Error('Coordinator ID not found');
+            }
+            await coordinatorService.delete(coordinatorId);
+            toast.success(`${coordinatorToDelete.name} deleted successfully!`);
+            
+            // Refresh the list of coordinators
             await fetchAllCoordinators();
-        } catch (err) {
-            setError('Failed to delete coordinator');
-            toast.error('Failed to delete coordinator');
-            console.error(err);
+        } catch (error) {
+            console.error('Delete Error:', error);
+            toast.error('Failed to delete coordinator. Please try again.');
         } finally {
-            setLoading(false);
+            setDeleteConfirmOpen(false);
+            setCoordinatorToDelete(null);
         }
     };
 
+    const handleDeleteCancel = () => {
+        setDeleteConfirmOpen(false);
+        setCoordinatorToDelete(null);
+    };
+
     const handleReset = () => {
-        setFormValues({ name: '', userid: '', role: 'admin', phone: '' });
-        setFormErrors({ name: '', userid: '', phone: '' });
+        setFormValues({ 
+            name: '', 
+            userid: '', 
+            role: 'coordinator', 
+            phone: '', 
+            mandal: '', 
+            village: '' 
+        });
+        setFormErrors({ 
+            name: '', 
+            userid: '', 
+            phone: '',
+            mandal: '',
+            village: ''
+        });
+        setSelectedMandal('');
+        setSelectedVillage('');
         setEditingIndex(null);
     };
 
@@ -348,9 +385,16 @@ function CoordinatorFormTable() {
             <div className="title">Coordinator List</div>
             <div className="coordinator-form-table">
                 <div className="coordinator-form">
-                    <div
-                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                    <div 
+                        role="button" 
+                        tabIndex={0} 
                         onClick={() => setShowForm(!showForm)}
+                        onKeyPress={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                setShowForm(!showForm);
+                            }
+                        }}
+                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                     >
                         <h3 style={{ marginRight: '10px' }}>
                             {editingIndex !== null ? 'Edit Coordinator' : 'Add Coordinator'}
@@ -492,7 +536,7 @@ function CoordinatorFormTable() {
                                                 <Button onClick={() => handleEdit(page * rowsPerPage + index)}>
                                                     <Edit />
                                                 </Button>
-                                                <Button onClick={() => handleDelete(row._id)}>
+                                                <Button onClick={() => handleDeleteClick(row)}>
                                                     <Delete />
                                                 </Button>
                                             </TableCell>
@@ -514,6 +558,27 @@ function CoordinatorFormTable() {
             </div>
             <FooterComp />
             <ToastContainer />
+            <Dialog
+                open={deleteConfirmOpen}
+                onClose={handleDeleteCancel}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">
+                    Delete Coordinator
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        Are you sure you want to delete coordinator {coordinatorToDelete && coordinatorToDelete.name}?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleDeleteCancel}>Cancel</Button>
+                    <Button onClick={handleDeleteConfirmed}  color="error" variant="contained">
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 }

@@ -196,7 +196,6 @@ function Login() {
                         label="Username"
                         name="username"
                         autoComplete="username"
-                        autoFocus
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         onKeyPress={handleKeyPress}

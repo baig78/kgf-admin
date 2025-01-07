@@ -3,7 +3,8 @@ import Navbar from "../../Components/Navbar/Navbar";
 import FooterComp from "../../Components/FooterComp/FooterComp";
 import './Location.css';
 import { addressService } from '../../service';
-import { Button, Container, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Box, Accordion, AccordionSummary, AccordionDetails, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { Button, Container, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Box, Accordion, AccordionSummary, AccordionDetails, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -523,13 +524,13 @@ const LocationComponent = () => {
 
     const handleConfirmDeleteVillage = async () => {
         try {
-            const villageId = villages.find(village => village.name === villageToDelete)?.id; // Use optional chaining
+            const villageId = villages.find(village => village.name === villageToDelete)?._id;
             if (!villageId) {
                 throw new Error('Village ID not found');
             }
             await addressService.deleteVillage(villageId);
             toast.success(`${villageToDelete} deleted successfully!`);
-            fetchVillages(selectedMandal); // Refresh the village list after deletion
+            fetchVillages(); // Refresh the village list after deletion
         } catch (error) {
             console.error("Error during village deletion:", error);
             toast.error('Failed to delete village. Please try again.');
@@ -548,13 +549,13 @@ const LocationComponent = () => {
             console.log("Attempting to delete mandal:", mandalToDelete);
             console.log("Available mandals:", mandals);
 
-            const mandalId = mandalToDelete;
+            const mandalId = mandals.find(mandal => mandal.name === mandalToDelete)?._id;
             if (!mandalId) {
                 throw new Error('Mandal ID not found');
             }
             await addressService.deleteMandal(mandalId);
             toast.success(`Mandal deleted successfully!`);
-            fetchMandals(selectedCity); // Refresh the mandal list after deletion
+            fetchMandals(); // Refresh the mandal list after deletion
         } catch (error) {
             console.error("Error during mandal deletion:", error.response ? error.response.data : error);
             toast.error('Failed to delete mandal. Please try again.');
@@ -602,25 +603,44 @@ const LocationComponent = () => {
                                 Submit
                             </Button>
 
-                            {expandedAccordion === 'country' && (
+                            {expandedAccordion === 'country' && countries.length > 0 && (
                                 <Box sx={{ mt: 4 }}>
                                     <Typography variant="h6" gutterBottom>
                                         All Countries
                                     </Typography>
-                                    <Typography>
-                                        {countries.sort((a, b) => a.name.localeCompare(b.name)).map(country => (
-                                            <span
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            flexWrap: 'wrap',
+                                            gap: 1,
+                                        }}
+                                    >
+                                        {countries.sort((a, b) => a.name.localeCompare(b.name)).map((country) => (
+                                            <Box
                                                 key={country.id}
-                                                onClick={() => handleDeleteCountry(country.name)}
-                                                style={{ cursor: 'pointer', color: 'black', textDecoration: 'none', marginRight: '8px' }}
+                                                sx={{
+                                                    border: '1px solid #ccc',
+                                                    borderRadius: 10,
+                                                    paddingLeft: 1,
+                                                    paddingRight: 1,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                                }}
                                             >
-                                                {country.name}
-                                            </span>
-                                        )).reduce((prev, curr) => [prev, ', ', curr])}
-                                    </Typography>
+                                                <Typography sx={{ marginRight: 1 }}>{country.name}</Typography>
+                                                <IconButton
+                                                    onClick={() => handleDeleteCountry(country.name)}
+                                                    size="small"
+                                                    color="error"
+                                                >
+                                                    <CloseIcon />
+                                                </IconButton>
+                                            </Box>
+                                        ))}
+                                    </Box>
                                 </Box>
                             )}
-
                         </AccordionDetails>
                     </Accordion>
 
@@ -669,25 +689,53 @@ const LocationComponent = () => {
                                     <Typography variant="h6" gutterBottom>
                                         States in Selected Country
                                     </Typography>
-                                    <Typography>
-                                        {states.length > 0 ?
-                                            states.sort((a, b) => a.name.localeCompare(b.name)).map(state => (
-                                                <span
-                                                    key={state.id}
-                                                    onClick={() => handleDeleteState(state.name)}
-                                                    style={{ cursor: 'pointer', color: 'black', textDecoration: 'none', marginRight: '8px' }}
-                                                >
-                                                    {state.name}
-                                                </span>
-                                            )).reduce((prev, curr) => [prev, ', ', curr])
-                                            : 'No states available for this country'}
-                                    </Typography>
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            flexWrap: 'wrap',
+                                            gap: 1,
+                                        }}
+                                    >
+                                        {states.length > 0 ? (
+                                            states.sort((a, b) => a.name.localeCompare(b.name))
+                                                .map((state) => (
+                                                    <Box
+                                                        key={state.id}
+                                                        sx={{
+                                                            border: '1px solid #ccc',
+                                                            borderRadius: 10,
+                                                            paddingLeft: 1,
+                                                            paddingRight: 1,
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                                        }}
+                                                    >
+                                                        <Typography sx={{ marginRight: 1 }}>{state.name}</Typography>
+                                                        <IconButton
+                                                            onClick={() => handleDeleteState(state.name)}
+                                                            size="small"
+                                                            color="error"
+                                                        >
+                                                            <CloseIcon />
+                                                        </IconButton>
+                                                    </Box>
+                                                ))
+                                        ) : (
+                                            <Typography>No states available for this country</Typography>
+                                        )}
+                                    </Box>
                                 </Box>
                             )}
                         </AccordionDetails>
                     </Accordion>
 
-                    <Accordion expanded={expandedAccordion === 'city'} onChange={() => setExpandedAccordion(expandedAccordion === 'city' ? null : 'city')}>
+                    <Accordion
+                        expanded={expandedAccordion === 'city'}
+                        onChange={() =>
+                            setExpandedAccordion(expandedAccordion === 'city' ? null : 'city')
+                        }
+                    >
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             <Typography variant="h6">Create City</Typography>
                         </AccordionSummary>
@@ -751,19 +799,41 @@ const LocationComponent = () => {
                                     <Typography variant="h6" gutterBottom>
                                         Cities in Selected State
                                     </Typography>
-                                    <Typography>
-                                        {cities.length > 0 ?
-                                            cities.sort((a, b) => a.name.localeCompare(b.name)).map(city => (
-                                                <span
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            flexWrap: 'wrap',
+                                            gap: 1,
+                                        }}
+                                    >
+                                        {cities.length > 0 ? (
+                                            cities.sort((a, b) => a.name.localeCompare(b.name)).map((city) => (
+                                                <Box
                                                     key={city.id}
-                                                    onClick={() => handleDeleteCity(city.name)}
-                                                    style={{ cursor: 'pointer', color: 'black', textDecoration: 'none', marginRight: '8px' }}
+                                                    sx={{
+                                                        border: '1px solid #ccc',
+                                                        borderRadius: 10,
+                                                        paddingLeft: 1,
+                                                        paddingRight: 1,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                                    }}
                                                 >
-                                                    {city.name}
-                                                </span>
-                                            )).reduce((prev, curr) => [prev, ', ', curr])
-                                            : 'No cities available for this state'}
-                                    </Typography>
+                                                    <Typography sx={{ marginRight: 1 }}>{city.name}</Typography>
+                                                    <IconButton
+                                                        onClick={() => handleDeleteCity(city.name)}
+                                                        size="small"
+                                                        color="error"
+                                                    >
+                                                        <CloseIcon />
+                                                    </IconButton>
+                                                </Box>
+                                            ))
+                                        ) : (
+                                            <Typography>No cities available for this state</Typography>
+                                        )}
+                                    </Box>
                                 </Box>
                             )}
                         </AccordionDetails>
@@ -860,19 +930,41 @@ const LocationComponent = () => {
                                     <Typography variant="h6" gutterBottom>
                                         Mandals in Selected City
                                     </Typography>
-                                    <Typography>
-                                        {cityMandals.length > 0 ?
-                                            cityMandals.sort((a, b) => a.name.localeCompare(b.name)).map(mandal => (
-                                                <span
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            flexWrap: 'wrap',
+                                            gap: 1,
+                                        }}
+                                    >
+                                        {cityMandals.length > 0 ? (
+                                            cityMandals.sort((a, b) => a.name.localeCompare(b.name)).map((mandal) => (
+                                                <Box
                                                     key={mandal._id}
-                                                    onClick={() => handleDeleteMandal(mandal.name)}
-                                                    style={{ cursor: 'pointer', color: 'black', textDecoration: 'none', marginRight: '8px' }}
+                                                    sx={{
+                                                        border: '1px solid #ccc',
+                                                        borderRadius: 10,
+                                                        paddingLeft: 1,
+                                                        paddingRight: 1,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                                    }}
                                                 >
-                                                    {mandal.name}
-                                                </span>
-                                            )).reduce((prev, curr) => [prev, ', ', curr])
-                                            : 'No mandals available for this city'}
-                                    </Typography>
+                                                    <Typography sx={{ marginRight: 1 }}>{mandal.name}</Typography>
+                                                    <IconButton
+                                                        onClick={() => handleDeleteMandal(mandal.name)}
+                                                        size="small"
+                                                        color="error"
+                                                    >
+                                                        <CloseIcon />
+                                                    </IconButton>
+                                                </Box>
+                                            ))
+                                        ) : (
+                                            <Typography>No mandals available for this city</Typography>
+                                        )}
+                                    </Box>
                                 </Box>
                             )}
                         </AccordionDetails>
@@ -968,27 +1060,53 @@ const LocationComponent = () => {
                                 Submit
                             </Button>
 
-                            {selectedMandal && (
+                            {selectedCity && (
                                 <Box sx={{ mt: 4 }}>
                                     <Typography variant="h6" gutterBottom>
-                                        Villages in Selected Mandal
+                                        Mandals in Selected City
                                     </Typography>
-                                    <Typography>
-                                        {cityVillages.length > 0 ?
-                                            cityVillages.sort((a, b) => a.name.localeCompare(b.name)).map(village => (
-                                                <span
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            flexWrap: 'wrap',
+                                            gap: 1,
+                                        }}
+                                    >
+                                        {cityVillages.length > 0 ? (
+                                            cityVillages.sort((a, b) => a.name.localeCompare(b.name)).map((village) => (
+                                                <Box
                                                     key={village._id}
-                                                    onClick={() => handleDeleteVillage(village.name)}
-                                                    style={{ cursor: 'pointer', color: 'black', textDecoration: 'none', marginRight: '8px' }}
+                                                    sx={{
+                                                        border: '1px solid #ccc',
+                                                        borderRadius: 10,
+                                                        paddingLeft: 1,
+                                                        paddingRight: 1,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                                    }}
+                                                    aria-labelledby={`mandal-${village._id}`}
                                                 >
-                                                    {village.name}
-                                                </span>
-                                            )).reduce((prev, curr) => [prev, ', ', curr])
-                                            : 'No villages available for this city'}
-                                    </Typography>
-
+                                                    <Typography sx={{ marginRight: 1 }} id={`mandal-${village._id}`}>
+                                                        {village.name}
+                                                    </Typography>
+                                                    <IconButton
+                                                        onClick={() => handleDeleteVillage(village.name)}
+                                                        size="small"
+                                                        color="error"
+                                                        aria-label={`Delete mandal ${village.name}`}
+                                                    >
+                                                        <CloseIcon />
+                                                    </IconButton>
+                                                </Box>
+                                            ))
+                                        ) : (
+                                            <Typography>No Village available for this mandal</Typography>
+                                        )}
+                                    </Box>
                                 </Box>
                             )}
+
                         </AccordionDetails>
                     </Accordion>
                 </Box>
@@ -996,33 +1114,31 @@ const LocationComponent = () => {
             <FooterComp />
             <ToastContainer position="top-right" autoClose={1000} />
             <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
-                <DialogTitle>Confirm Deletion</DialogTitle>
+                <DialogTitle>Delete Country</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Are you sure you want to delete {countryToDelete}?
+                    Are you sure you want to delete the country &quot;{countryToDelete}&quot;?
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setOpenDeleteDialog(false)} color="primary">
-                        Cancel
-                    </Button>
-                    <Button onClick={handleConfirmDelete} color="primary">
+                    <Button onClick={() => setOpenDeleteDialog(false)}>Cancel</Button>
+                    <Button onClick={handleConfirmDelete} color="error" variant="contained">
                         Delete
                     </Button>
                 </DialogActions>
             </Dialog>
             <Dialog open={openDeleteStateDialog} onClose={() => setOpenDeleteStateDialog(false)}>
-                <DialogTitle>Confirm Deletion</DialogTitle>
+                <DialogTitle>Delete State</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Are you sure you want to delete {stateToDelete}?
+                    Are you sure you want to delete state &quot;{stateToDelete}&quot;?
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setOpenDeleteStateDialog(false)} color="primary">
+                    <Button onClick={() => setOpenDeleteStateDialog(false)}>
                         Cancel
                     </Button>
-                    <Button onClick={handleConfirmDeleteState} color="primary">
+                    <Button onClick={handleConfirmDeleteState} color="error" variant="contained">
                         Delete
                     </Button>
                 </DialogActions>
@@ -1055,7 +1171,7 @@ const LocationComponent = () => {
                         Cancel
                     </Button>
                     <Button onClick={handleConfirmDeleteVillage} color="primary">
-                        Delete
+                        Delete tes
                     </Button>
                 </DialogActions>
             </Dialog>
