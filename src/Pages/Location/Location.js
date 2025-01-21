@@ -42,6 +42,19 @@ const LocationComponent = () => {
     const [cityMandals, setCityMandals] = useState([]);
     const [cityVillages, setCityVillages] = useState([]);
 
+    const resetLocationForm = () => {
+        setCountryName('');
+        setStateName('');
+        setCityName('');
+        setMandalName('');
+        setVillageName('');
+        setSelectedCountryState('');
+        setSelectedCountryCity('');
+        setSelectedState('');
+        setSelectedCity('');
+        setSelectedMandal('');
+        setValidationErrors({});
+    };
 
     useEffect(() => {
         fetchCountries();
@@ -180,9 +193,8 @@ const LocationComponent = () => {
             const response = await addressService.addCity(cityData);
             if (response.success) {
                 toast.success('City added successfully!');
-                setCityName('');
+                resetLocationForm();
                 fetchCities(selectedState);
-                setValidationErrors({});
             } else {
                 throw new Error(response.message || 'Failed to add city.');
             }
@@ -233,9 +245,8 @@ const LocationComponent = () => {
             const response = await addressService.addState(stateData);
             if (response.success) {
                 toast.success('State added successfully!');
-                setStateName('');
+                resetLocationForm();
                 fetchStates(selectedCountryState);
-                setValidationErrors({});
             } else {
                 throw new Error(response.message || 'Failed to add state.');
             }
@@ -271,8 +282,7 @@ const LocationComponent = () => {
             const response = await addressService.addCountry(countryData);
             if (response.success) {
                 toast.success('Country added successfully!');
-                setCountryName('');
-                setValidationErrors({});
+                resetLocationForm();
                 fetchCountries();
             } else {
                 throw new Error(response.message || 'Failed to add country.');
@@ -346,8 +356,7 @@ const LocationComponent = () => {
             const response = await addressService.addVillage(villageData);
             if (response.success) {
                 toast.success("Village added successfully!");
-                setVillageName("");
-                setSelectedMandal("");
+                resetLocationForm();
                 fetchVillages(selectedMandal);
             } else {
                 throw new Error(response.message || "Failed to add village");
@@ -422,7 +431,7 @@ const LocationComponent = () => {
             const response = await addressService.addMandal(mandalData);
             if (response.success) {
                 toast.success("Mandal added successfully!");
-                setMandalName("");
+                resetLocationForm();
                 fetchMandals(selectedCity);
             } else {
                 throw new Error(response.message || "Failed to add mandal");
