@@ -32,8 +32,8 @@ const LocationComponent = () => {
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
     const [countryToDelete, setCountryToDelete] = useState(null);
     const [openDeleteStateDialog, setOpenDeleteStateDialog] = useState(false);
-    const [openDeleteCityDialog, setOpenDeleteCityDialog] = useState(false);
     const [stateToDelete, setStateToDelete] = useState(null);
+    const [openDeleteCityDialog, setOpenDeleteCityDialog] = useState(false);
     const [cityToDelete, setCityToDelete] = useState(null);
     const [openDeleteVillageDialog, setOpenDeleteVillageDialog] = useState(false);
     const [villageToDelete, setVillageToDelete] = useState(null);
@@ -707,30 +707,29 @@ const LocationComponent = () => {
                                         }}
                                     >
                                         {states.length > 0 ? (
-                                            states.sort((a, b) => a.name.localeCompare(b.name))
-                                                .map((state) => (
-                                                    <Box
-                                                        key={state.id}
-                                                        sx={{
-                                                            border: '1px solid #ccc',
-                                                            borderRadius: 10,
-                                                            paddingLeft: 1,
-                                                            paddingRight: 1,
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                                                        }}
+                                            states.sort((a, b) => a.name.localeCompare(b.name)).map((state) => (
+                                                <Box
+                                                    key={state.id}
+                                                    sx={{
+                                                        border: '1px solid #ccc',
+                                                        borderRadius: 10,
+                                                        paddingLeft: 1,
+                                                        paddingRight: 1,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                                    }}
+                                                >
+                                                    <Typography sx={{ marginRight: 1 }}>{state.name}</Typography>
+                                                    <IconButton
+                                                        onClick={() => handleDeleteState(state.name)}
+                                                        size="small"
+                                                        color="error"
                                                     >
-                                                        <Typography sx={{ marginRight: 1 }}>{state.name}</Typography>
-                                                        <IconButton
-                                                            onClick={() => handleDeleteState(state.name)}
-                                                            size="small"
-                                                            color="error"
-                                                        >
-                                                            <CloseIcon />
-                                                        </IconButton>
-                                                    </Box>
-                                                ))
+                                                        <CloseIcon />
+                                                    </IconButton>
+                                                </Box>
+                                            ))
                                         ) : (
                                             <Typography>No states available for this country</Typography>
                                         )}
@@ -1154,50 +1153,44 @@ const LocationComponent = () => {
                 </DialogActions>
             </Dialog>
             <Dialog open={openDeleteCityDialog} onClose={() => setOpenDeleteCityDialog(false)}>
-                <DialogTitle>Confirm Deletion</DialogTitle>
+                <DialogTitle>Delete City</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Are you sure you want to delete {cityToDelete}?
+                    Are you sure you want to delete the city &quot;{cityToDelete}&quot;?
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setOpenDeleteCityDialog(false)} color="primary">
-                        Cancel
+                    <Button onClick={() => setOpenDeleteCityDialog(false)}>Cancel</Button>
+                    <Button onClick={handleConfirmDeleteCity} color="error" variant="contained">
+                        Delete
                     </Button>
-                    <Button onClick={handleConfirmDeleteCity} color="primary">
+                </DialogActions>
+            </Dialog>
+            <Dialog open={openDeleteMandalDialog} onClose={() => setOpenDeleteMandalDialog(false)}>
+                <DialogTitle>Delete Mandal</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                    Are you sure you want to delete the mandal &quot;{mandalToDelete}&quot;?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenDeleteMandalDialog(false)}>Cancel</Button>
+                    <Button onClick={handleConfirmDeleteMandal} color="error" variant="contained">
                         Delete
                     </Button>
                 </DialogActions>
             </Dialog>
             <Dialog open={openDeleteVillageDialog} onClose={() => setOpenDeleteVillageDialog(false)}>
-                <DialogTitle>Confirm Deletion</DialogTitle>
+                <DialogTitle>Delete Village</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Are you sure you want to delete {villageToDelete}?
+                    Are you sure you want to delete the village &quot;{villageToDelete}&quot;?
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setOpenDeleteVillageDialog(false)} color="primary">
-                        Cancel
-                    </Button>
-                    <Button onClick={handleConfirmDeleteVillage} color="primary">
-                        Delete tes
-                    </Button>
-                </DialogActions>
-            </Dialog>
-            <Dialog open={openDeleteMandalDialog} onClose={() => setOpenDeleteMandalDialog(false)}>
-                <DialogTitle>Confirm Deletion</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        Are you sure you want to delete {mandalToDelete}?
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setOpenDeleteMandalDialog(false)} color="primary">
-                        Cancel
-                    </Button>
-                    <Button onClick={handleConfirmDeleteMandal} color="primary">
-                        Delete1
+                    <Button onClick={() => setOpenDeleteVillageDialog(false)}>Cancel</Button>
+                    <Button onClick={handleConfirmDeleteVillage} color="error" variant="contained">
+                        Delete
                     </Button>
                 </DialogActions>
             </Dialog>
