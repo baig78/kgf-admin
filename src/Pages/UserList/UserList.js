@@ -8,7 +8,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import './UserList.css';
 import FooterComp from '../../Components/FooterComp/FooterComp';
-import { userService, downloadUserPdf } from '../../service';
+import { userService } from '../../service';
 import { TailSpin } from 'react-loader-spinner';
 import html2pdf from 'html2pdf.js';
 import CardFront from '../IDCard/IDCard';
@@ -48,7 +48,7 @@ export default function UserList() {
     }, [getAllUsersData]);
 
     // Memoize data transformation
-    const processedData = useMemo(() => 
+    const processedData = useMemo(() =>
         data.map(user => ({
             id: user._id,
             photo: user.photo,
@@ -120,25 +120,19 @@ export default function UserList() {
         doc.save("user_data.pdf");
     };
 
-    const handleDownloadPdf = async (userData) => {
-        try {
-            const response = await downloadUserPdf(userData.id);
-            
-            // Create a Blob from the PDF data
-            const blob = new Blob([response], { type: 'application/pdf' });
-            
-            // Create a URL for the Blob
-            const url = window.URL.createObjectURL(blob);
-            
-            // Open the PDF in a new tab
-            window.open(url, '_blank');
-
-            toast.success('PDF opened successfully!');
-        } catch (error) {
-            console.error('Error opening PDF:', error);
-            toast.error(error.message || 'Failed to open PDF');
-        }
-    };
+    // const handleDownloadPdf = async (userData) => {
+    //     alert()
+    //     try {
+    //         const response = await downloadUserPdf(userData.id);
+    //         const blob = new Blob([response], { type: 'application/pdf' });
+    //         const url = window.URL.createObjectURL(blob);
+    //         window.open(url, '_blank');
+    //         toast.success('PDF opened successfully!');
+    //     } catch (error) {
+    //         console.error('Error opening PDF:', error);
+    //         toast.error(error.message || 'Failed to open PDF');
+    //     }
+    // };
 
     const cardRef = useRef(null);
 
@@ -165,9 +159,9 @@ export default function UserList() {
             headerName: 'Photo',
             width: 100,
             renderCell: (params) => (
-                <div 
-                    role="button" 
-                    tabIndex={0} 
+                <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => handleImageClick(params.value, params.row)}
                     onKeyPress={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
@@ -201,19 +195,19 @@ export default function UserList() {
             headerName: 'View ID Card',
             width: 150,
             getActions: (params) => [
-                <GridActionsCellItem 
-                    key={`view-${params.row.id}`}
-                    icon={<ViewIcon />} 
-                    label="View Card" 
-                    onClick={() => handleViewCard(params.row)} 
-                />,
                 <GridActionsCellItem
-                    key={`download-pdf-${params.row.id}`}
-                    icon={<DownloadIcon />}
-                    label="Download PDF"
-                    onClick={() => handleDownloadPdf(params.row)}
-                />
-                
+                    key={`view-${params.row.id}`}
+                    icon={<ViewIcon />}
+                    label="View Card"
+                    onClick={() => handleViewCard(params.row)}
+                />,
+                // <GridActionsCellItem
+                //     key={`download-pdf-${params.row.id}`}
+                //     icon={<DownloadIcon />}
+                //     label="Download PDF"
+                //     onClick={() => handleDownloadPdf(params.row)}
+                // />
+
             ],
         },
     ];

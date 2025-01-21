@@ -284,13 +284,18 @@ const LocationComponent = () => {
     };
 
     const fetchVillages = async (mandalId) => {
-        const filteredVillages = villages.filter((villages: any) => villages.mandal === mandalId);
-        setCityVillages(filteredVillages);
         try {
             const response = await addressService.getVillages(mandalId); // Fetch villages for a specific mandal
+            
+            // Set the full list of villages
             setVillages(response);
+            
+            // Filter villages for the selected mandal
+            const filteredVillages = response.filter((village: any) => village.mandal === mandalId);
+            setCityVillages(filteredVillages);
         } catch (error) {
             console.error("Error fetching villages:", error);
+            setCityVillages([]); // Ensure cityVillages is reset on error
         }
     };
 
@@ -354,14 +359,19 @@ const LocationComponent = () => {
     };
 
     const fetchMandals = async (cityId) => {
-        const filteredMandals = mandals.filter((mandal: any) => mandal.city === cityId);
-        setCityMandals(filteredMandals);
         try {
             const response = await addressService.getMandals(cityId);
-            console.log(response, '-----m')
+            console.log(response, '-----m');
+            
+            // Set the full list of mandals
             setMandals(response);
+            
+            // Filter mandals for the selected city
+            const filteredMandals = response.filter((mandal: any) => mandal.city === cityId);
+            setCityMandals(filteredMandals);
         } catch (error) {
             console.error("Error fetching mandals:", error);
+            setCityMandals([]); // Ensure cityMandals is reset on error
         }
     };
 
