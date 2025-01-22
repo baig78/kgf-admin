@@ -755,7 +755,7 @@ const LocationComponent = () => {
                         }
                     >
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                            <Typography variant="h6">Create City</Typography>
+                            <Typography variant="h6">Create District</Typography>
                         </AccordionSummary>
                         <AccordionDetails>
                             <FormControl fullWidth margin="normal">

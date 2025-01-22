@@ -21,9 +21,15 @@ const Home = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const response = await userService.getAllUsers();
-            const users = response.data;
-            const totalUsers = response.metadata.totalUsers;
+            // Fetch first page with a larger count to get comprehensive data
+            const response = await userService.getAllUsers(1, 1000);
+            console.log('Full API Response:', response);
+            
+            const users = response.data || [];
+            const totalUsers = response.metadata?.totalUsers || users.length;
+
+            console.log('Total Users:', totalUsers);
+            console.log('Users Data:', users);
 
             const countriesCount = users.reduce((acc, user) => {
                 const country = user.country || 'Unknown';
@@ -31,11 +37,13 @@ const Home = () => {
                 return acc;
             }, {});
 
+            console.log('Countries Count:', countriesCount);
+
             setRegistrations({ total: totalUsers, countries: countriesCount });
 
         } catch (err) {
-            console.error('Error fetching user data:', err);
-            setError('Failed to load registration data. Please try again.');
+            console.error('Detailed Error fetching user data:', err);
+            setError(`Failed to load registration data: ${err.message}`);
             toast.error('Unable to fetch registration details');
         } finally {
             setLoading(false);

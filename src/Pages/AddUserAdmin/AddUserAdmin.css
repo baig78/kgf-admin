@@ -1,0 +1,31 @@
+/* Input fields styling */
+.MuiTextField-root input {
+  background-color: white;
+  margin-bottom: 0 !important;
+}
+
+/* Dropdown styling */
+.MuiSelect-root {
+  background-color: white;
+  height: 48px !important;
+}
+
+/* Table header styling */
+.MuiTableHead-root {
+  background-color: #006ae8;
+}
+
+.MuiTableHead-root .MuiTableCell-root {
+  color: white !important;
+  font-weight: bold;
+}
+
+/* Ensure consistent height for input and select */
+.MuiOutlinedInput-root {
+  height: 48px !important;
+}
+
+/* Remove default margin for form groups */
+.MuiFormControl-root {
+  margin-bottom: 0 !important;
+}

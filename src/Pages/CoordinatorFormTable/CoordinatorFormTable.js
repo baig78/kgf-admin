@@ -498,7 +498,7 @@ function CoordinatorFormTable() {
                                 <TableRow>
                                     <TableCell>
                                         <TableSortLabel
-                                            active={orderBy === 'name'}
+                                            // active={orderBy === 'name'}
                                             direction={orderBy === 'name' ? order : 'asc'}
                                             onClick={() => handleRequestSort('name')}
                                         >
@@ -507,7 +507,7 @@ function CoordinatorFormTable() {
                                     </TableCell>
                                     <TableCell>
                                         <TableSortLabel
-                                            active={orderBy === 'userid'}
+                                            // active={orderBy === 'userid'}
                                             direction={orderBy === 'userid' ? order : 'asc'}
                                             onClick={() => handleRequestSort('userid')}
                                         >
