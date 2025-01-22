@@ -11,11 +11,18 @@ import {
     TextField,
     TableSortLabel,
     TablePagination,
+    MenuItem,
+    Select,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle
 } from '@mui/material';
 import './CoordinatorFormTable.css';
 import Navbar from '../../Components/Navbar/Navbar';
 import FooterComp from '../../Components/FooterComp/FooterComp';
-import { coordinatorService, userService } from '../../service';
+import { coordinatorService, userService, addressService } from '../../service';
 import { Edit, Delete, ExpandMore, ExpandLess } from '@mui/icons-material';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -28,11 +35,15 @@ function CoordinatorFormTable() {
         userid: '',
         role: 'coordinator',
         phone: '',
+        mandal: '',
+        village: ''
     });
     const [formErrors, setFormErrors] = useState({
         name: '',
         userid: '',
-        phone: ''
+        phone: '',
+        mandal: '',
+        village: ''
     });
     const [order, setOrder] = useState('asc');
     const [orderBy, setOrderBy] = useState('name');
@@ -42,10 +53,23 @@ function CoordinatorFormTable() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [showForm, setShowForm] = useState(false);
+    const [mandals, setMandals] = useState([]);
+    const [selectedMandal, setSelectedMandal] = useState('');
+    const [villages, setVillages] = useState([]);
+    const [selectedVillage, setSelectedVillage] = useState('');
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [coordinatorToDelete, setCoordinatorToDelete] = useState(null);
 
     useEffect(() => {
         fetchAllCoordinators();
+        fetchMandals();
+        fetchVillages();
     }, []);
+
+    useEffect(() => {
+        console.log('Mandals:', mandals);
+        console.log('Villages:', villages);
+    }, [mandals, villages]);
 
     const validateField = (name, value) => {
         let error = '';
@@ -101,12 +125,16 @@ function CoordinatorFormTable() {
         const { name, value } = e.target;
         setFormValues({ ...formValues, [name]: value });
 
+        // If the selected field is 'mandal', filter villages
+        if (name === 'mandal') {
+            const filteredVillages = villages.filter(village => village.mandal === value);
+            setFormValues({ ...formValues, village: '' }); // Reset village selection
+            setVillages(filteredVillages); // Filter villages based on selected mandal
+        }
+
         // Validate field on change
         const error = validateField(name, value);
-        setFormErrors(prev => ({
-            ...prev,
-            [name]: error
-        }));
+        setFormErrors(prev => ({ ...prev, [name]: error }));
     };
 
     const isFormValid = () => {
@@ -133,7 +161,7 @@ function CoordinatorFormTable() {
             toast.success('Coordinator added successfully!');
             setShowForm(false);
         } catch (err) {
-            toast.error('Failed to add coordinator');
+            toast.error(err.message);
             console.error(err);
         } finally {
             setLoading(false);
@@ -210,25 +238,54 @@ function CoordinatorFormTable() {
         setShowForm(true);
     };
 
-    const handleDelete = async (id) => {
-        setLoading(true);
-        setError('');
+    const handleDeleteClick = (coordinator) => {
+        setCoordinatorToDelete(coordinator);
+        setDeleteConfirmOpen(true);
+    };
+
+    const handleDeleteConfirmed = async () => {
         try {
-            await coordinatorService.delete(id);
-            toast.success('Coordinator deleted successfully!');
+            const coordinatorId = coordinatorToDelete._id;
+            if (!coordinatorId) {
+                throw new Error('Coordinator ID not found');
+            }
+            await coordinatorService.delete(coordinatorId);
+            toast.success(`${coordinatorToDelete.name} deleted successfully!`);
+            
+            // Refresh the list of coordinators
             await fetchAllCoordinators();
-        } catch (err) {
-            setError('Failed to delete coordinator');
-            toast.error('Failed to delete coordinator');
-            console.error(err);
+        } catch (error) {
+            console.error('Delete Error:', error);
+            toast.error('Failed to delete coordinator. Please try again.');
         } finally {
-            setLoading(false);
+            setDeleteConfirmOpen(false);
+            setCoordinatorToDelete(null);
         }
     };
 
+    const handleDeleteCancel = () => {
+        setDeleteConfirmOpen(false);
+        setCoordinatorToDelete(null);
+    };
+
     const handleReset = () => {
-        setFormValues({ name: '', userid: '', role: 'admin', phone: '' });
-        setFormErrors({ name: '', userid: '', phone: '' });
+        setFormValues({ 
+            name: '', 
+            userid: '', 
+            role: 'coordinator', 
+            phone: '', 
+            mandal: '', 
+            village: '' 
+        });
+        setFormErrors({ 
+            name: '', 
+            userid: '', 
+            phone: '',
+            mandal: '',
+            village: ''
+        });
+        setSelectedMandal('');
+        setSelectedVillage('');
         setEditingIndex(null);
     };
 
@@ -263,6 +320,58 @@ function CoordinatorFormTable() {
         }
     }, [filteredData, rowsPerPage, page]);
 
+    const fetchMandals = async () => {
+        setLoading(true);
+        setError('');
+        try {
+            const response = await addressService.getMandals();
+            console.log('Mandals Response:', response);  // Check the response
+            if (response && response) {
+                setMandals(response);
+            } else {
+                setError('No mandals available');
+                toast.error('No mandals available');
+            }
+        } catch (err) {
+            setError('Failed to fetch mandals');
+            toast.error('Failed to fetch mandals');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchVillages = async () => {
+        setLoading(true);
+        setError('');
+        try {
+            const response = await addressService.getVillages();
+            console.log('Villages Response:', response);  // Check the response
+            if (response && response) {
+                setVillages(response);
+            } else {
+                setError('No villages available');
+                toast.error('No villages available');
+            }
+        } catch (err) {
+            setError('Failed to fetch villages');
+            toast.error('Failed to fetch villages');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleMandalChange = async (event) => {
+        const mandalId = event.target.value;
+        setSelectedMandal(mandalId);
+
+        // Fetch villages based on selected mandal
+        const villageResponse = await fetch(`/api/villages?mandal=${mandalId}`); // Adjust API endpoint
+        const villageData = await villageResponse.json();
+        setVillages(villageData);
+    };
+
     return (
         <>
             <Navbar />
@@ -276,9 +385,16 @@ function CoordinatorFormTable() {
             <div className="title">Coordinator List</div>
             <div className="coordinator-form-table">
                 <div className="coordinator-form">
-                    <div
-                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                    <div 
+                        role="button" 
+                        tabIndex={0} 
                         onClick={() => setShowForm(!showForm)}
+                        onKeyPress={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                setShowForm(!showForm);
+                            }
+                        }}
+                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                     >
                         <h3 style={{ marginRight: '10px' }}>
                             {editingIndex !== null ? 'Edit Coordinator' : 'Add Coordinator'}
@@ -327,6 +443,40 @@ function CoordinatorFormTable() {
                                         helperText={formErrors.phone}
                                     />
                                 </div>
+                                <div className="form-group">
+                                    <Select
+                                        value={selectedMandal}
+                                        onChange={handleMandalChange}
+                                        fullWidth
+                                        displayEmpty
+                                        sx={{ mt: 2 }}
+                                    >
+                                        <MenuItem value="" disabled>Select Mandal</MenuItem>
+                                        {mandals.map((mandal) => (
+                                            <MenuItem key={mandal._id} value={mandal._id}>
+                                                {mandal.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </div>
+                                <div className="form-group">
+                                    <Select
+                                        value={selectedVillage}
+                                        onChange={(e) => setSelectedVillage(e.target.value)}
+                                        fullWidth
+                                        displayEmpty
+                                        sx={{ mt: 2 }}
+                                        disabled={!selectedMandal} // Disable if no mandal is selected
+                                    >
+                                        <MenuItem value="" disabled>Select Village</MenuItem>
+                                        {villages.map((village) => (
+                                            <MenuItem key={village._id} value={village._id}>
+                                                {village.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </div>
+
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginRight: '10px' }}>
                                 <Button type="button" variant="outlined" color="secondary" onClick={handleReset}>
@@ -348,7 +498,7 @@ function CoordinatorFormTable() {
                                 <TableRow>
                                     <TableCell>
                                         <TableSortLabel
-                                            active={orderBy === 'name'}
+                                            // active={orderBy === 'name'}
                                             direction={orderBy === 'name' ? order : 'asc'}
                                             onClick={() => handleRequestSort('name')}
                                         >
@@ -357,7 +507,7 @@ function CoordinatorFormTable() {
                                     </TableCell>
                                     <TableCell>
                                         <TableSortLabel
-                                            active={orderBy === 'userid'}
+                                            // active={orderBy === 'userid'}
                                             direction={orderBy === 'userid' ? order : 'asc'}
                                             onClick={() => handleRequestSort('userid')}
                                         >
@@ -386,7 +536,7 @@ function CoordinatorFormTable() {
                                                 <Button onClick={() => handleEdit(page * rowsPerPage + index)}>
                                                     <Edit />
                                                 </Button>
-                                                <Button onClick={() => handleDelete(row._id)}>
+                                                <Button onClick={() => handleDeleteClick(row)}>
                                                     <Delete />
                                                 </Button>
                                             </TableCell>
@@ -408,6 +558,27 @@ function CoordinatorFormTable() {
             </div>
             <FooterComp />
             <ToastContainer />
+            <Dialog
+                open={deleteConfirmOpen}
+                onClose={handleDeleteCancel}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">
+                    Delete Coordinator
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        Are you sure you want to delete coordinator {coordinatorToDelete && coordinatorToDelete.name}?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleDeleteCancel}>Cancel</Button>
+                    <Button onClick={handleDeleteConfirmed}  color="error" variant="contained">
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 }

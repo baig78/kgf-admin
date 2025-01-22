@@ -34,7 +34,20 @@ function Login() {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
-            navigate('/user-list', { replace: true });
+            // Check if the token is expired
+            const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+            const isExpired = tokenPayload.exp * 1000 < Date.now(); // Check expiration
+
+            if (isExpired) {
+                localStorage.clear();
+                navigate('/', { replace: true });
+                toast.info('Logged out due to token expiration', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+            } else {
+                navigate('/user-list', { replace: true });
+            }
         }
     }, [navigate]);
 
@@ -87,6 +100,7 @@ function Login() {
             const credentials = { phone_or_userId: phone, password };
             const response = await authService.login(credentials);
 
+            // Store token in localStorage
             dispatch(setToken(response.token));
             localStorage.setItem('name', phone);
             localStorage.setItem('token', response.token);
@@ -95,7 +109,20 @@ function Login() {
                 autoClose: 5000,
             });
 
-            navigate('/user-list', { replace: true });
+            // Check if the token is expired after login
+            const tokenPayload = JSON.parse(atob(response.token.split('.')[1]));
+            const isExpired = tokenPayload.exp * 1000 < Date.now(); // Check expiration
+
+            if (isExpired) {
+                localStorage.clear();
+                navigate('/', { replace: true });
+                toast.info('Logged out due to token expiration', {
+                    position: 'top-right',
+                    autoClose: 3000,
+                });
+            } else {
+                navigate('/user-list', { replace: true });
+            }
         } catch (err) {
             console.error('Login failed:', err);
             toast.error(err.message || 'Invalid login credentials', {
@@ -155,6 +182,8 @@ function Login() {
                     alignItems: 'center'
                 }}
             >
+
+                <img src="/assets/download.png" alt="Admin Login" width="200" height="200" />
                 <Typography component="h1" variant="h5">
                     Welcome to Admin Login
                 </Typography>
@@ -167,7 +196,6 @@ function Login() {
                         label="Username"
                         name="username"
                         autoComplete="username"
-                        autoFocus
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         onKeyPress={handleKeyPress}

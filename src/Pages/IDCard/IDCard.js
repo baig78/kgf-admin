@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from 'prop-types';
 import "./IDCard.css";
 
 const CardFront = ({ cardDetails }) => {
@@ -24,7 +25,6 @@ const CardFront = ({ cardDetails }) => {
                         </div>
                     </div>
                     <div className="section-details">
-
                         <div className="details">
                             <div className="row">
                                 <span>Name:</span>
@@ -39,13 +39,10 @@ const CardFront = ({ cardDetails }) => {
                                 <span>{cardDetails.state}</span>
                             </div>
                         </div>
-
                         <div>
                             <img src="../assets/qrcode.png" alt="QR Code" className="qr-code" />
-
                         </div>
                     </div>
-
                     <div className="signature-section">
                         <div className="signature">
                             <img src="../assets/sign.png" alt="Signature" />
@@ -53,12 +50,10 @@ const CardFront = ({ cardDetails }) => {
                             <p>Founder President</p>
                         </div>
                     </div>
-
                     <div className="footer-idcard">
                         <span>ONE IDENTITY, ONE LEGACY</span>
                     </div>
                 </div>
-
                 <div className="card-back">
                     <img style={{
                         width: "220px",
@@ -75,7 +70,6 @@ const CardFront = ({ cardDetails }) => {
                             <li>Does not authorize speaking for KGF.</li>
                         </ol>
                     </div>
-
                     <div className="contact-section">
                         <h4>KAMMA GLOBAL FEDERATION</h4>
                         <p>Rd. No.41, Jubilee Hills, </p>
@@ -87,6 +81,14 @@ const CardFront = ({ cardDetails }) => {
             </div >
         </>
     );
+};
+
+CardFront.propTypes = {
+    cardDetails: PropTypes.shape({
+        photo: PropTypes.string.isRequired,
+        name: PropTypes.string.isRequired,
+        state: PropTypes.string.isRequired
+    }).isRequired
 };
 
 export default CardFront;

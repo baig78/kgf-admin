@@ -135,9 +135,11 @@ const addressService = {
         }
     },
 
-    getMandals: async () => {
+    getMandals: async (cityId) => {
         try {
-            const response = await axiosInstance.get('/address/getMandals');
+            const response = await axiosInstance.get('/address/getMandals', {
+                params: { cityId }
+            });
             return response.data;
         } catch (error) {
             throw error.response?.data || error.message;
@@ -164,7 +166,9 @@ const addressService = {
 
     deleteCountry: async (countryId) => {
         try {
-            const response = await axiosInstance.delete(`/address/deleteCountry/${countryId}`);
+            const response = await axiosInstance.delete(`/address/deleteCountry`, {
+                data: { id: countryId },
+            });
             return response.data;
         } catch (error) {
             console.error("Error deleting country:", error);
@@ -172,19 +176,35 @@ const addressService = {
         }
     },
 
+
     deleteState: async (stateId) => {
         try {
-            const response = await axiosInstance.delete(`/address/deleteState/${stateId}`);
+            const response = await axiosInstance.delete(`/address/deleteState`, {
+                data: { id: stateId },
+            });
             return response.data;
         } catch (error) {
             console.error("Error deleting state:", error);
             throw error;
         }
     },
+    deleteCity: async (cityId) => {
+        try {
+            const response = await axiosInstance.delete(`/address/deleteCity`, {
+                data: { id: cityId },
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Error deleting city:", error);
+            throw error;
+        }
+    },
 
     deleteVillage: async (villageId) => {
         try {
-            const response = await axiosInstance.delete(`/address/deleteVillage/${villageId}`);
+            const response = await axiosInstance.delete(`/address/deleteVillage`, {
+                data: { id: villageId },
+            });
             return response.data;
         } catch (error) {
             console.error("Error deleting village:", error);
@@ -194,7 +214,9 @@ const addressService = {
 
     deleteMandal: async (mandalId) => {
         try {
-            const response = await axiosInstance.delete(`/address/deleteMandal/${mandalId}`);
+            const response = await axiosInstance.delete(`/address/deleteMandal`, {
+                data: { id: mandalId },
+            });
             return response.data;
         } catch (error) {
             console.error("Error deleting mandal:", error);
@@ -238,9 +260,86 @@ const coordinatorService = {
     }
 };
 
+// Add user PDF download service
+const downloadUserPdf = async (userId) => {
+
+    try {
+        const response = await axiosInstance.get(`/users/pdf/${userId}`, {
+            data: { userId }
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error.message;
+    }
+};
+// try {
+//     const response = await axiosInstance.get(`/users/pdf/${userId}`, {
+//         responseType: 'blob',
+//         headers: {
+//             'Accept': 'application/pdf'
+//         },
+//         // Intercept the response to handle non-PDF content
+//         transformResponse: [function (data, headers) {
+//             const contentType = headers['content-type'];
+
+//             // Log unexpected content type
+//             if (!contentType.includes('application/pdf')) {
+//                 console.error('Unexpected Content Type:', {
+//                     contentType,
+//                     dataType: typeof data,
+//                     dataLength: data?.length
+//                 });
+
+//                 // If it's HTML, try to extract error message
+//                 if (contentType.includes('text/html')) {
+//                     try {
+//                         const errorText = data instanceof Blob 
+//                             ? new TextDecoder().decode(data) 
+//                             : data;
+
+//                         console.error('HTML Error Content:', errorText);
+
+//                         // Extract potential error details
+//                         const titleMatch = errorText.match(/<title>(.*?)<\/title>/i);
+//                         const bodyMatch = errorText.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+
+//                         const errorTitle = titleMatch ? titleMatch[1] : 'Unexpected Response';
+//                         const errorBody = bodyMatch 
+//                             ? bodyMatch[1].replace(/<[^>]*>/g, '').trim() 
+//                             : 'No additional details available';
+
+//                         throw new Error(`Server Error: ${errorTitle} - ${errorBody}`);
+//                     } catch (parseError) {
+//                         console.error('Failed to parse HTML error:', parseError);
+//                         throw new Error('Received unexpected HTML response');
+//                     }
+//                 }
+//             }
+//             return data;
+//         }]
+//     });
+
+//     return response;
+// } catch (error) {
+//     // Enhanced error logging
+//     console.error('PDF Download Error:', {
+//         errorName: error.name,
+//         errorMessage: error.message,
+//         response: error.response ? {
+//             status: error.response.status,
+//             headers: error.response.headers,
+//             data: error.response.data
+//         } : null
+//     });
+
+//     throw error;
+// }
+
+
 export {
     authService,
     userService,
     addressService,
-    coordinatorService
+    coordinatorService,
+    downloadUserPdf
 };

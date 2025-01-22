@@ -23,14 +23,14 @@
   }
   .title h1 {
     margin: 0;
-    font-size: 25px;
+    font-size: 16px;
     color: #fff;
     text-align: center;
   }
 
   .title h2 {
     margin: 0;
-    font-size: 18px;
+    font-size: 13px;
     color: #fff;
     text-align: center;
   }
@@ -66,7 +66,7 @@
     justify-content: flex-end;
     padding: 0 3px 10px 10px;
     text-align: center;
-    margin-top: -16px;
+    margin-top: -33px;
 
     p {
       margin: 0px;
@@ -105,7 +105,7 @@
   .note-section {
     background-color: #006a4ea3;
     color: white;
-    padding: 30px;
+    padding: 15px 30px 15px 30px;
   }
 
   .note-section span {
@@ -122,7 +122,7 @@
 
   .contact-section {
     text-align: center;
-    padding: 30px;
+    padding: 15px 15px 15px 30px;
     font-size: 10px;
     text-align: left;
 

@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { DataGrid, GridActionsCellItem, GridToolbarQuickFilter, GridToolbarContainer, GridToolbarFilterButton } from '@mui/x-data-grid';
-import { Paper, Button, Box, Dialog, DialogContent, Typography } from '@mui/material';
-import { Download as DownloadIcon, PictureAsPdf as PictureAsPdfIcon } from '@mui/icons-material';
+import { Paper, Button, Box, Dialog, DialogContent, Typography, IconButton } from '@mui/material';
+import { Download as DownloadIcon, PictureAsPdf as PictureAsPdfIcon, Visibility as ViewIcon, Close as CloseIcon } from '@mui/icons-material';
 import Navbar from '../../Components/Navbar/Navbar';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -12,50 +12,34 @@ import { userService } from '../../service';
 import { TailSpin } from 'react-loader-spinner';
 import html2pdf from 'html2pdf.js';
 import CardFront from '../IDCard/IDCard';
+import { toast } from 'react-toastify';
 
 export default function UserList() {
-
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
     const [data, setData] = useState([]);
-    const [filteredRows, setFilteredRows] = useState([]);
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [filteredRows, setFilteredRows] = useState([]);
+    const [openImageDialog, setOpenImageDialog] = useState(false);
+    const [openCardDialog, setopenCardDialog] = useState(false);
+    const [cardDetails, setCardDetails] = useState({});
     const [selectedImage, setSelectedImage] = useState(null);
     const [selectedUserData, setSelectedUserData] = useState(null);
-    const [openImageDialog, setOpenImageDialog] = useState(false);
-    const [cardDetails, setCardDetails] = useState({});
-    const [showCard, setShowCard] = useState(false);
 
-    // Fetch user data from API
     const getAllUsersData = useCallback(async () => {
-        setError(''); // Clear previous errors
-        setLoading(true); // Show loading state
+        setError('');
+        setLoading(true);
 
         try {
             const response = await userService.getAllUsers(page, rowsPerPage);
-            // Handle successful response
-            const usersData = response.data.map(user => ({
-                id: user._id,
-                photo: user.photo,
-                surname: user.surname,
-                name: user.name,
-                gothram: user.gothram,
-                mobile: user.mobile,
-                dob: user.dob,
-                gender: user.gender,
-                residentType: user.residentType,
-                state: user.state,
-                city: user.city,
-                country: user.country,
-                address: user.address,
-            }));
-            setData(usersData); // Set data to state
+            setData(response.data);
         } catch (err) {
             console.error('Error fetching users:', err);
             setError('Something went wrong, please try again later');
+            toast.error('Failed to load user data');
         } finally {
-            setLoading(false); // Stop loading state
+            setLoading(false);
         }
     }, [page, rowsPerPage]);
 
@@ -63,7 +47,23 @@ export default function UserList() {
         getAllUsersData();
     }, [getAllUsersData]);
 
-
+    // Memoize data transformation
+    const processedData = useMemo(() =>
+        data.map(user => ({
+            id: user._id,
+            photo: user.photo,
+            surname: user.surname,
+            name: user.name,
+            gothram: user.gothram,
+            mobile: user.mobile,
+            dob: user.dob,
+            gender: user.gender,
+            residentType: user.residentType,
+            state: user.state,
+            city: user.city,
+            country: user.country,
+            address: user.address,
+        })), [data]);
 
     const handleImageClick = (imageUrl, rowData) => {
         setSelectedImage(imageUrl);
@@ -73,13 +73,13 @@ export default function UserList() {
 
     const handleCloseDialog = () => {
         setOpenImageDialog(false);
+        setopenCardDialog(false);
         setSelectedImage(null);
         setSelectedUserData(null);
     };
 
     const exportToExcel = () => {
-        // Use filteredRows if there are any, otherwise use all data
-        const dataToExport = filteredRows.length > 0 ? filteredRows : data;
+        const dataToExport = filteredRows.length > 0 ? filteredRows : processedData;
 
         const formattedData = dataToExport.map((row) => ({
             ID: row.id,
@@ -103,8 +103,7 @@ export default function UserList() {
     };
 
     const exportToPDF = () => {
-        // Use filteredRows if there are any, otherwise use all data
-        const dataToExport = filteredRows.length > 0 ? filteredRows : data;
+        const dataToExport = filteredRows.length > 0 ? filteredRows : processedData;
 
         const doc = new jsPDF();
         const columns = [
@@ -121,13 +120,19 @@ export default function UserList() {
         doc.save("user_data.pdf");
     };
 
-    const handleDownloadCardFront = (userData) => {
-        console.log(userData, '-------------userData');
-        setCardDetails(userData);
-        setShowCard(true);
-        downloadPDF(userData);
-    };
-
+    // const handleDownloadPdf = async (userData) => {
+    //     alert()
+    //     try {
+    //         const response = await downloadUserPdf(userData.id);
+    //         const blob = new Blob([response], { type: 'application/pdf' });
+    //         const url = window.URL.createObjectURL(blob);
+    //         window.open(url, '_blank');
+    //         toast.success('PDF opened successfully!');
+    //     } catch (error) {
+    //         console.error('Error opening PDF:', error);
+    //         toast.error(error.message || 'Failed to open PDF');
+    //     }
+    // };
 
     const cardRef = useRef(null);
 
@@ -143,39 +148,65 @@ export default function UserList() {
         html2pdf().set(options).from(element).save();
     };
 
+    const handleViewCard = (userData) => {
+        setCardDetails(userData);
+        setopenCardDialog(true);
+    };
+
     const columns = [
         {
             field: 'photo',
             headerName: 'Photo',
             width: 100,
             renderCell: (params) => (
-                <img
-                    src={params.value}
-                    alt="profile"
-                    width="60"
-                    height="60"
-                    style={{ cursor: 'pointer', objectFit: 'cover', borderRadius: '50%' }}
+                <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => handleImageClick(params.value, params.row)}
-                />
+                    onKeyPress={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            handleImageClick(params.value, params.row);
+                        }
+                    }}
+                >
+                    <img
+                        src={params.value}
+                        alt="profile"
+                        width="60"
+                        height="60"
+                        style={{ cursor: 'pointer', objectFit: 'cover', borderRadius: '50%' }}
+                    />
+                </div>
             )
         },
-        { field: 'surname', headerName: 'Surname', width: 130, cellClassName: 'vertical-center' },
-        { field: 'name', headerName: 'Name', width: 130, cellClassName: 'vertical-center' },
-        { field: 'gothram', headerName: 'Gothram', width: 130, cellClassName: 'vertical-center' },
-        { field: 'mobile', headerName: 'Mobile', width: 130, cellClassName: 'vertical-center' },
-        { field: 'dob', headerName: 'Date of Birth', width: 130, cellClassName: 'vertical-center' },
-        { field: 'gender', headerName: 'Gender', width: 130, cellClassName: 'vertical-center' },
-        { field: 'residentType', headerName: 'Resident Type', width: 130, cellClassName: 'vertical-center' },
-        { field: 'state', headerName: 'State', width: 180, cellClassName: 'vertical-center' },
-        { field: 'city', headerName: 'City', width: 180, cellClassName: 'vertical-center' },
-        { field: 'country', headerName: 'Country', width: 180, cellClassName: 'vertical-center' },
+        { field: 'surname', headerName: 'Surname', width: 113, cellClassName: 'vertical-center' },
+        { field: 'name', headerName: 'Name', width: 113, cellClassName: 'vertical-center' },
+        { field: 'gothram', headerName: 'Gothram', width: 113, cellClassName: 'vertical-center' },
+        { field: 'mobile', headerName: 'Mobile', width: 113, cellClassName: 'vertical-center' },
+        { field: 'dob', headerName: 'Date of Birth', width: 113, cellClassName: 'vertical-center' },
+        { field: 'gender', headerName: 'Gender', width: 113, cellClassName: 'vertical-center' },
+        { field: 'residentType', headerName: 'Resident Type', width: 113, cellClassName: 'vertical-center' },
+        { field: 'state', headerName: 'State', width: 113, cellClassName: 'vertical-center' },
+        { field: 'city', headerName: 'City', width: 113, cellClassName: 'vertical-center' },
+        { field: 'country', headerName: 'Country', width: 113, cellClassName: 'vertical-center' },
         {
             field: 'actions',
             type: 'actions',
-            headerName: 'Actions',
+            headerName: 'View ID Card',
             width: 150,
             getActions: (params) => [
-                <GridActionsCellItem icon={<DownloadIcon />} label="Download Card Front" onClick={() => handleDownloadCardFront(params.row)} />,
+                <GridActionsCellItem
+                    key={`view-${params.row.id}`}
+                    icon={<ViewIcon />}
+                    label="View Card"
+                    onClick={() => handleViewCard(params.row)}
+                />,
+                // <GridActionsCellItem
+                //     key={`download-pdf-${params.row.id}`}
+                //     icon={<DownloadIcon />}
+                //     label="Download PDF"
+                //     onClick={() => handleDownloadPdf(params.row)}
+                // />
 
             ],
         },
@@ -208,12 +239,6 @@ export default function UserList() {
 
     return (
         <>
-            {showCard && (
-                <div ref={cardRef} style={{}}>
-                    <CardFront cardDetails={cardDetails} />
-                </div>
-            )}
-
             <Navbar />
             <div className='user-list'>
                 <Box display="flex" justifyContent="space-between" mb={2}>
@@ -231,7 +256,7 @@ export default function UserList() {
                     <Paper sx={{ height: 500, width: '100%' }}>
                         <DataGrid
                             className="custom-data-grid"
-                            rows={data}
+                            rows={processedData}
                             columns={columns}
                             initialState={{
                                 pagination: {
@@ -248,11 +273,11 @@ export default function UserList() {
                             filterMode="client"
                             onFilterModelChange={(model) => {
                                 if (!model.items || model.items.length === 0) {
-                                    setFilteredRows(data);
+                                    setFilteredRows(processedData);
                                     return;
                                 }
 
-                                const filtered = data.filter(row => {
+                                const filtered = processedData.filter(row => {
                                     return model.items.every(filterItem => {
                                         const value = row[filterItem.field];
                                         const searchValue = filterItem.value;
@@ -280,12 +305,52 @@ export default function UserList() {
                 )}
 
                 <Dialog
+                    open={openCardDialog}
+                    onClose={handleCloseDialog}
+                    maxWidth="md"
+                    fullWidth
+                >
+                    <DialogContent>
+                        <IconButton
+                            edge="end"
+                            color="inherit"
+                            onClick={handleCloseDialog}
+                            aria-label="close"
+                            style={{ position: 'absolute', right: 20, top: 8 }}
+                        >
+                            <CloseIcon />
+                        </IconButton>
+                        <div className="dialog-content-container" ref={cardRef} style={{ padding: '20px' }}>
+                            <CardFront cardDetails={cardDetails} />
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+                            <Button
+                                variant="contained"
+                                onClick={() => downloadPDF(cardDetails)}
+                                style={{ backgroundColor: '#3f51b5', color: '#fff' }}
+                            >
+                                Download ID Card
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+
+                <Dialog
                     open={openImageDialog}
                     onClose={handleCloseDialog}
                     maxWidth="md"
                     fullWidth
                 >
                     <DialogContent>
+                        <IconButton
+                            edge="end"
+                            color="inherit"
+                            onClick={handleCloseDialog}
+                            aria-label="close"
+                            style={{ position: 'absolute', right: 20, top: 8 }}
+                        >
+                            <CloseIcon />
+                        </IconButton>
                         <div className="dialog-content-container">
                             {/* Image Section */}
                             <div className="dialog-image-container">
@@ -296,8 +361,6 @@ export default function UserList() {
                                     />
                                 )}
                             </div>
-
-                            {/* User Details Section */}
                             <div className="dialog-details-container">
                                 {selectedUserData && (
                                     <>
@@ -320,7 +383,6 @@ export default function UserList() {
                             </div>
                         </div>
                     </DialogContent>
-
                 </Dialog>
 
             </div>

@@ -54,7 +54,8 @@ table td {
 }
 
 table th {
-  background-color: #f4f4f4;
+  background-color: #006ae8;
+  color: white;
 }
 
 /* Form styling */
@@ -82,12 +83,23 @@ table th {
 /* Input fields styling */
 .form-group input {
   width: 100%;
-
   font-size: 14px;
-
   border-radius: 4px;
   box-sizing: border-box;
-  margin-bottom: 10px;
+  margin-bottom: 0;
+  background-color: white;
+  height: 48px;
+}
+
+/* Dropdown styling */
+.form-group select {
+  width: 100%;
+  font-size: 14px;
+  border-radius: 4px;
+  box-sizing: border-box;
+  margin-bottom: 0;
+  background-color: white;
+  height: 48px;
 }
 
 /* Button styling */
@@ -112,6 +124,7 @@ table th {
 }
 
 .coordinator-form-table .coordinator-form {
+  background-color: #ffffff;
   border: 1px solid #c2c2c2;
   padding: 20px;
 }
@@ -127,3 +140,4 @@ table th {
 .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input {
   height: 48px !important;
 }
+
