@@ -13,6 +13,8 @@ import { TailSpin } from 'react-loader-spinner';
 import html2pdf from 'html2pdf.js';
 import CardFront from '../IDCard/IDCard';
 import { toast } from 'react-toastify';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 export default function UserList() {
     const [data, setData] = useState([]);
@@ -213,25 +215,48 @@ export default function UserList() {
     ];
 
     function CustomToolbar() {
-        return (
+        const theme = useTheme();
+        const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-            <GridToolbarContainer sx={{ justifyContent: 'flex-end' }}>
+        return (
+            <GridToolbarContainer 
+                sx={{ 
+                    justifyContent: 'flex-end', 
+                    flexWrap: 'nowrap', 
+                    overflowX: 'auto', 
+                    padding: '0 10px',
+                    gap: 1 // Add small gap between items
+                }}
+            >
                 <GridToolbarFilterButton />
-                <GridToolbarQuickFilter />
+                <GridToolbarQuickFilter 
+                    sx={{ 
+                        minWidth: isMobile ? 100 : 'auto', 
+                        flexGrow: isMobile ? 1 : 0 
+                    }} 
+                />
                 <Button
                     variant="text"
                     onClick={exportToExcel}
                     startIcon={<DownloadIcon />}
-                    sx={{ mr: 1 }}
+                    sx={{ 
+                        mr: 1, 
+                        minWidth: isMobile ? 'auto' : undefined,
+                        padding: isMobile ? '6px 8px' : undefined
+                    }}
                 >
-                    Export Excel
+                    {!isMobile && 'Export Excel'}
                 </Button>
                 <Button
                     variant="text"
                     onClick={exportToPDF}
                     startIcon={<PictureAsPdfIcon />}
+                    sx={{ 
+                        minWidth: isMobile ? 'auto' : undefined,
+                        padding: isMobile ? '6px 8px' : undefined
+                    }}
                 >
-                    Export PDF
+                    {!isMobile && 'Export PDF'}
                 </Button>
             </GridToolbarContainer>
         );

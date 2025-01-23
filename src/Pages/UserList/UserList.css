@@ -106,3 +106,74 @@
 .css-1awsx0u-MuiDataGrid-root .MuiDataGrid-container--bottom [role="row"] {
   background: #f4f4f4 !important;
 }
+
+@media screen and (max-width: 600px) {
+  .user-list {
+    padding: 10px; /* Reduced padding */
+  }
+
+  .user-list .title {
+    margin-left: 5px;
+    font-size: 1.2rem;
+  }
+
+  .dialog-content-container {
+    flex-direction: column;
+    height: auto;
+    gap: 10px;
+  }
+
+  .dialog-image-container,
+  .dialog-details-container {
+    flex: none;
+    width: 100%;
+    max-height: none;
+  }
+
+  .dialog-image-container img {
+    max-height: 300px;
+    object-fit: contain;
+  }
+
+  .dialog-details-container {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .MuiDataGrid-toolbarContainer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    overflow-x: auto; /* Allow horizontal scrolling if needed */
+    white-space: nowrap; /* Prevent wrapping */
+    padding: 10px 5px;
+    gap: 5px; /* Small gap between items */
+  }
+
+  /* Ensure buttons and icons are compact */
+  .MuiDataGrid-toolbarContainer .MuiButton-root,
+  .MuiDataGrid-toolbarContainer .MuiIconButton-root {
+    min-width: auto;
+    padding: 6px 8px;
+  }
+
+  /* Hide text on mobile */
+  .MuiDataGrid-toolbarContainer .MuiButton-root .MuiButton-label {
+    display: none;
+  }
+
+  /* Scrollbar for toolbar on mobile */
+  .MuiDataGrid-toolbarContainer::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .MuiDataGrid-toolbarContainer::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  .MuiDataGrid-toolbarContainer::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 2px;
+  }
+}

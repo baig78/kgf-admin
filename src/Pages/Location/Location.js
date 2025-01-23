@@ -153,9 +153,9 @@ const LocationComponent = () => {
             errors.state = 'Please select a state';
         }
         if (!cityName || cityName.trim() === '') {
-            errors.cityName = 'Please enter a city name';
+            errors.cityName = 'Please enter a district name';
         } else if (cityName.trim().length < 2) {
-            errors.cityName = 'City name must be at least 2 characters long';
+            errors.cityName = 'District name must be at least 2 characters long';
         }
 
         // Check if city already exists in selected state
@@ -181,7 +181,7 @@ const LocationComponent = () => {
         if (!await validateCityData()) return;
 
         if (!isValidName(cityName)) {
-            setValidationErrors(prev => ({ ...prev, cityName: 'City name must not contain special characters or numbers.' }));
+            setValidationErrors(prev => ({ ...prev, cityName: 'District name must not contain special characters or numbers.' }));
             return;
         }
 
@@ -801,7 +801,7 @@ const LocationComponent = () => {
 
                             <TextField
                                 fullWidth
-                                label="City Name"
+                                label="District Name"
                                 value={cityName}
                                 onChange={(e) => setCityName(e.target.value)}
                                 margin="normal"
@@ -904,14 +904,14 @@ const LocationComponent = () => {
                             </FormControl>
 
                             <FormControl fullWidth margin="normal" error={!!validationErrors.city}>
-                                <InputLabel>Select City</InputLabel>
+                                <InputLabel>Select District</InputLabel>
                                 <Select
                                     value={selectedCity || ''}
                                     onChange={(e) => {
                                         handleCityChange(e.target.value);
                                         setSelectedMandal(''); // Reset selected Mandal when city changes
                                     }}
-                                    label="Select City"
+                                    label="Select District"
                                 >
                                     <MenuItem value="">
                                         <em>None</em>
@@ -1029,11 +1029,11 @@ const LocationComponent = () => {
                             </FormControl>
 
                             <FormControl fullWidth margin="normal">
-                                <InputLabel>Select City</InputLabel>
+                                <InputLabel>Select District</InputLabel>
                                 <Select
                                     value={selectedCity || ''}
                                     onChange={(e) => handleCityChange(e.target.value)}
-                                    label="Select City"
+                                    label="Select District"
                                 >
                                     <MenuItem value="">
                                         <em>None</em>

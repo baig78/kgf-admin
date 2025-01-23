@@ -26,17 +26,80 @@
   /* Form styling for mobile */
   .form-group-row {
     flex-direction: column; /* Stack form fields vertically on small screens */
-    gap: 15px;
+    gap: 0px !important;
   }
 
   .form-group {
     flex: 1;
-    max-width: 100%; /* Allow full width on mobile */
+    max-width: 100% !important; /* Allow full width on mobile */
   }
 
   .add-btn {
     width: 100%;
     margin-top: 20px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .coordinator-form-table {
+    padding: 10px;
+  }
+
+  .title {
+    margin-left: 10px;
+    font-size: 1.2rem;
+  }
+
+  .form-group-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .form-group {
+    max-width: 100%;
+    padding: 5px;
+  }
+
+  .form-group input,
+  .form-group select {
+    width: 100%; /* Full width */
+    height: 40px; /* Specific height */
+    font-size: 14px; /* Slightly larger font for readability */
+    padding: 8px; /* Internal padding */
+    box-sizing: border-box; /* Include padding in width calculation */
+  }
+
+  /* Ensure Material-UI TextField and Select are also responsive */
+  .MuiTextField-root,
+  .MuiSelect-root {
+    width: 100% !important;
+    margin-bottom: 10px;
+  }
+
+  .MuiOutlinedInput-root {
+    height: 40px !important;
+    font-size: 14px !important;
+  }
+
+  .MuiInputBase-input {
+    height: 40px !important;
+    padding: 8px !important;
+  }
+
+  .add-btn {
+    width: 100%;
+    margin-top: 15px;
+    float: none;
+    right: 0;
+  }
+
+  table {
+    font-size: 10px;
+  }
+
+  table th,
+  table td {
+    padding: 6px 8px;
   }
 }
 
@@ -140,4 +203,3 @@ table th {
 .css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input {
   height: 48px !important;
 }
-
