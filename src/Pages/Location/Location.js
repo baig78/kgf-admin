@@ -140,8 +140,8 @@ const LocationComponent = () => {
             citiesForState.sort((a, b) => a.name.localeCompare(b.name));
             setCities(citiesForState);
         } catch (err) {
-            console.error("Error fetching cities:", err);
-            setError('Failed to load cities. Please try again later.');
+            console.error("Error fetching districts:", err);
+            setError('Failed to load districts. Please try again later.');
         } finally {
             setLoading(false);
         }
@@ -815,7 +815,7 @@ const LocationComponent = () => {
                             {selectedState && (
                                 <Box sx={{ mt: 4 }}>
                                     <Typography variant="h6" gutterBottom>
-                                        Cities in Selected State
+                                        Districts in Selected State
                                     </Typography>
                                     <Box
                                         sx={{
@@ -849,7 +849,7 @@ const LocationComponent = () => {
                                                 </Box>
                                             ))
                                         ) : (
-                                            <Typography>No cities available for this state</Typography>
+                                            <Typography>No districts available for this state</Typography>
                                         )}
                                     </Box>
                                 </Box>
