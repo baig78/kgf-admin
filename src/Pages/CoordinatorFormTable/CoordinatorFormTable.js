@@ -17,7 +17,9 @@ import {
     DialogActions,
     DialogContent,
     DialogContentText,
-    DialogTitle
+    DialogTitle,
+    FormControl,
+    InputLabel
 } from '@mui/material';
 import './CoordinatorFormTable.css';
 import Navbar from '../../Components/Navbar/Navbar';
@@ -364,21 +366,28 @@ function CoordinatorFormTable() {
         }
     };
 
-    const handleMandalChange = (event) => {
-        const mandalId = event.target.value;
-        setSelectedMandal(mandalId);
+    const handleMandalChange = (mandalId) => {
+        // Ensure mandalId is extracted correctly whether it's an event or direct value
+        const selectedMandalId = typeof mandalId === 'object' ? mandalId.target.value : mandalId;
+        
+        // Update form values
+        setFormValues(prev => ({
+            ...prev,
+            mandal: selectedMandalId,
+            village: '' // Reset village when mandal changes
+        }));
+        
+        // Set selected mandal
+        setSelectedMandal(selectedMandalId);
 
         // Safely filter villages based on selected mandal
         const filteredVillages = originalVillages.filter(village => 
-            village.mandal === mandalId || 
-            (typeof village.mandal === 'object' && village.mandal?._id === mandalId)
+            village.mandal === selectedMandalId || 
+            (typeof village.mandal === 'object' && village.mandal?._id === selectedMandalId)
         );
         
         // Update villages with filtered results
         setVillages(filteredVillages);
-
-        // Reset selected village when mandal changes
-        setSelectedVillage('');
     };
 
     return (
@@ -453,20 +462,23 @@ function CoordinatorFormTable() {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <Select
-                                        value={selectedMandal}
-                                        onChange={handleMandalChange}
-                                        fullWidth
-                                        displayEmpty
-                                        sx={{ mt: 2 }}
-                                    >
-                                        <MenuItem value="" disabled>Select Mandal</MenuItem>
-                                        {mandals.map((mandal) => (
-                                            <MenuItem key={mandal._id} value={mandal._id}>
-                                                {mandal.name}
+                                    <FormControl fullWidth margin="normal">
+                                        <InputLabel>Select Mandal</InputLabel>
+                                        <Select
+                                            value={selectedMandal || ''}
+                                            onChange={(e) => handleMandalChange(e)}
+                                            label="Select Mandal"
+                                        >
+                                            <MenuItem value="">
+                                                <em>None</em>
                                             </MenuItem>
-                                        ))}
-                                    </Select>
+                                            {mandals.map((mandal) => (
+                                                <MenuItem key={mandal._id} value={mandal._id}>
+                                                    {mandal.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
                                 </div>
                                 <div className="form-group">
                                     <Select
