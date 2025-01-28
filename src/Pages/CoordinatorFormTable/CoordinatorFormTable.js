@@ -379,6 +379,9 @@ function CoordinatorFormTable() {
         
         // Set selected mandal
         setSelectedMandal(selectedMandalId);
+        
+        // Reset selected village
+        setSelectedVillage('');
 
         // Safely filter villages based on selected mandal
         const filteredVillages = originalVillages.filter(village => 
@@ -491,15 +494,28 @@ function CoordinatorFormTable() {
                                             value={selectedVillage || ''}
                                             onChange={(e) => handleVillageChange(e.target.value)}
                                             label="Select Village"
+                                            renderValue={(selected) => {
+                                                if (selected === '') {
+                                                    return <em>None</em>;
+                                                }
+                                                const selectedVillage = villages.find(village => village._id === selected);
+                                                return selectedVillage ? selectedVillage.name : '';
+                                            }}
                                         >
                                             <MenuItem value="">
                                                 <em>None</em>
                                             </MenuItem>
-                                            {villages.map((village) => (
-                                                <MenuItem key={village._id} value={village._id}>
-                                                    {village.name}
+                                            {villages.length === 0 ? (
+                                                <MenuItem disabled>
+                                                    No village available
                                                 </MenuItem>
-                                            ))}
+                                            ) : (
+                                                villages.map((village) => (
+                                                    <MenuItem key={village._id} value={village._id}>
+                                                        {village.name}
+                                                    </MenuItem>
+                                                ))
+                                            )}
                                         </Select>
                                     </FormControl>
                                 </div>
