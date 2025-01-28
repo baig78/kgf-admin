@@ -32,7 +32,8 @@ const CardFront = ({ cardDetails }) => {
                             </div>
                             <div className="row">
                                 <span>Membership No:</span>
-                                <span>123</span>
+                                {/* <span>{cardDetails.memberShip}</span> */}
+                                <span>KGF-M50001</span>
                             </div>
                             <div className="row">
                                 <span>State:</span>

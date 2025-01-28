@@ -375,7 +375,7 @@ const LocationComponent = () => {
             // Set the full list of mandals
             setMandals(response);
             
-            // Filter mandals for the selected city
+            // Filter mandals for the selected Dirstict
             const filteredMandals = response.filter((mandal: any) => mandal.city === cityId);
             setCityMandals(filteredMandals);
         } catch (error) {
@@ -393,7 +393,7 @@ const LocationComponent = () => {
             try {
                 const cityDetails = await addressService.getCities(selectedCity);
                 if (!cityDetails) {
-                    errors.city = "Selected city does not exist";
+                    errors.city = "Selected district does not exist";
                 }
             } catch (err) {
                 console.error("Error fetching city details:", err);
@@ -405,10 +405,10 @@ const LocationComponent = () => {
         } else if (mandalName.trim().length < 2) {
             errors.mandalName = "Mandal name must be at least 2 characters long";
         } else {
-            // Check if mandal already exists in selected city
+            // Check if mandal already exists in selected District
             const mandalsResponse = await addressService.getMandals(selectedCity);
             if (mandalsResponse.some(mandal => mandal.name.toLowerCase() === mandalName.trim().toLowerCase())) {
-                errors.mandalName = 'This mandal already exists in the selected city';
+                errors.mandalName = 'This mandal already exists in the selected district';
             }
         }
         setValidationErrors(errors);
@@ -946,7 +946,7 @@ const LocationComponent = () => {
                             {selectedCity && (
                                 <Box sx={{ mt: 4 }}>
                                     <Typography variant="h6" gutterBottom>
-                                        Mandals in Selected City
+                                        Mandals in Selected District
                                     </Typography>
                                     <Box
                                         sx={{
@@ -1081,7 +1081,7 @@ const LocationComponent = () => {
                             {selectedCity && (
                                 <Box sx={{ mt: 4 }}>
                                     <Typography variant="h6" gutterBottom>
-                                        Mandals in Selected City
+                                        Villages in Selected Mandal
                                     </Typography>
                                     <Box
                                         sx={{
