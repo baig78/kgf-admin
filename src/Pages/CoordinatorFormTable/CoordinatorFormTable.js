@@ -390,6 +390,10 @@ function CoordinatorFormTable() {
         setVillages(filteredVillages);
     };
 
+    const handleVillageChange = (villageId) => {
+        setSelectedVillage(villageId);
+    };
+
     return (
         <>
             <Navbar />
@@ -481,21 +485,23 @@ function CoordinatorFormTable() {
                                     </FormControl>
                                 </div>
                                 <div className="form-group">
-                                    <Select
-                                        value={selectedVillage}
-                                        onChange={(e) => setSelectedVillage(e.target.value)}
-                                        fullWidth
-                                        displayEmpty
-                                        sx={{ mt: 2 }}
-                                        disabled={!selectedMandal} // Disable if no mandal is selected
-                                    >
-                                        <MenuItem value="" disabled>Select Village</MenuItem>
-                                        {villages.map((village) => (
-                                            <MenuItem key={village._id} value={village._id}>
-                                                {village.name}
+                                    <FormControl fullWidth margin="normal">
+                                        <InputLabel>Select Village</InputLabel>
+                                        <Select
+                                            value={selectedVillage || ''}
+                                            onChange={(e) => handleVillageChange(e.target.value)}
+                                            label="Select Village"
+                                        >
+                                            <MenuItem value="">
+                                                <em>None</em>
                                             </MenuItem>
-                                        ))}
-                                    </Select>
+                                            {villages.map((village) => (
+                                                <MenuItem key={village._id} value={village._id}>
+                                                    {village.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
                                 </div>
 
                             </div>
