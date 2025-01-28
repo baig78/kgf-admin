@@ -13,6 +13,8 @@ import { TailSpin } from 'react-loader-spinner';
 import html2pdf from 'html2pdf.js';
 import CardFront from '../IDCard/IDCard';
 import { toast } from 'react-toastify';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 export default function UserList() {
     const [data, setData] = useState([]);
@@ -120,19 +122,37 @@ export default function UserList() {
         doc.save("user_data.pdf");
     };
 
-    // const handleDownloadPdf = async (userData) => {
-    //     alert()
-    //     try {
-    //         const response = await downloadUserPdf(userData.id);
-    //         const blob = new Blob([response], { type: 'application/pdf' });
-    //         const url = window.URL.createObjectURL(blob);
-    //         window.open(url, '_blank');
-    //         toast.success('PDF opened successfully!');
-    //     } catch (error) {
-    //         console.error('Error opening PDF:', error);
-    //         toast.error(error.message || 'Failed to open PDF');
-    //     }
-    // };
+    const handleDownloadPdf = async (userId, download = false) => {
+        if (!userId) {
+            toast.error('Invalid user ID');
+            return;
+        }
+
+        try {
+            await userService.downloadUserPdf(userId, { 
+                preview: !download, 
+                download 
+            });
+        } catch (error) {
+            console.error(`PDF Download Error for User ID: ${userId}`, error);
+            
+            // Extract the specific error message
+            const errorMessage = error.message || 'Failed to download PDF';
+            
+            // More specific error handling
+            if (errorMessage.includes('Server Error: KGF Card')) {
+                toast.error('Unable to generate PDF. Please contact system administrator.');
+            } else if (errorMessage.includes('authentication') || errorMessage.includes('authorization')) {
+                toast.warn('Please log in again to download the PDF.');
+            } else if (errorMessage.includes('timeout') || errorMessage.includes('network')) {
+                toast.error('Network error. Please check your internet connection and try again.');
+            } else if (errorMessage.includes('empty PDF file')) {
+                toast.error('The generated PDF is empty. Please contact support.');
+            } else {
+                toast.error(`PDF Download Failed: ${errorMessage}`);
+            }
+        }
+    };
 
     const cardRef = useRef(null);
 
@@ -192,46 +212,74 @@ export default function UserList() {
         {
             field: 'actions',
             type: 'actions',
-            headerName: 'View ID Card',
-            width: 150,
+            headerName: 'Actions',
+            width: 130,
             getActions: (params) => [
                 <GridActionsCellItem
                     key={`view-${params.row.id}`}
                     icon={<ViewIcon />}
-                    label="View Card"
+                    label="View ID Card"
                     onClick={() => handleViewCard(params.row)}
                 />,
                 // <GridActionsCellItem
-                //     key={`download-pdf-${params.row.id}`}
+                //     key={`download-${params.row.id}`}
                 //     icon={<DownloadIcon />}
-                //     label="Download PDF"
-                //     onClick={() => handleDownloadPdf(params.row)}
+                //     label="Download ID Card"
+                //     onClick={() => handleDownloadPdf(params.row.id, true)}
+                // />,
+                // <GridActionsCellItem
+                //     key={`preview-${params.row.id}`}
+                //     icon={<PictureAsPdfIcon />}
+                //     label="Preview ID Card"
+                //     onClick={() => handleDownloadPdf(params.row.id)}
                 // />
-
-            ],
+            ]
         },
     ];
 
     function CustomToolbar() {
-        return (
+        const theme = useTheme();
+        const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-            <GridToolbarContainer sx={{ justifyContent: 'flex-end' }}>
+        return (
+            <GridToolbarContainer 
+                sx={{ 
+                    justifyContent: 'flex-end', 
+                    flexWrap: 'nowrap', 
+                    overflowX: 'auto', 
+                    padding: '0 10px',
+                    gap: 1 // Add small gap between items
+                }}
+            >
                 <GridToolbarFilterButton />
-                <GridToolbarQuickFilter />
+                <GridToolbarQuickFilter 
+                    sx={{ 
+                        minWidth: isMobile ? 100 : 'auto', 
+                        flexGrow: isMobile ? 1 : 0 
+                    }} 
+                />
                 <Button
                     variant="text"
                     onClick={exportToExcel}
                     startIcon={<DownloadIcon />}
-                    sx={{ mr: 1 }}
+                    sx={{ 
+                        mr: 1, 
+                        minWidth: isMobile ? 'auto' : undefined,
+                        padding: isMobile ? '6px 8px' : undefined
+                    }}
                 >
-                    Export Excel
+                    {!isMobile && 'Export Excel'}
                 </Button>
                 <Button
                     variant="text"
                     onClick={exportToPDF}
                     startIcon={<PictureAsPdfIcon />}
+                    sx={{ 
+                        minWidth: isMobile ? 'auto' : undefined,
+                        padding: isMobile ? '6px 8px' : undefined
+                    }}
                 >
-                    Export PDF
+                    {!isMobile && 'Export PDF'}
                 </Button>
             </GridToolbarContainer>
         );

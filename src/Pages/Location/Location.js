@@ -140,8 +140,8 @@ const LocationComponent = () => {
             citiesForState.sort((a, b) => a.name.localeCompare(b.name));
             setCities(citiesForState);
         } catch (err) {
-            console.error("Error fetching cities:", err);
-            setError('Failed to load cities. Please try again later.');
+            console.error("Error fetching districts:", err);
+            setError('Failed to load districts. Please try again later.');
         } finally {
             setLoading(false);
         }
@@ -153,9 +153,9 @@ const LocationComponent = () => {
             errors.state = 'Please select a state';
         }
         if (!cityName || cityName.trim() === '') {
-            errors.cityName = 'Please enter a city name';
+            errors.cityName = 'Please enter a district name';
         } else if (cityName.trim().length < 2) {
-            errors.cityName = 'City name must be at least 2 characters long';
+            errors.cityName = 'District name must be at least 2 characters long';
         }
 
         // Check if city already exists in selected state
@@ -181,7 +181,7 @@ const LocationComponent = () => {
         if (!await validateCityData()) return;
 
         if (!isValidName(cityName)) {
-            setValidationErrors(prev => ({ ...prev, cityName: 'City name must not contain special characters or numbers.' }));
+            setValidationErrors(prev => ({ ...prev, cityName: 'District name must not contain special characters or numbers.' }));
             return;
         }
 
@@ -375,7 +375,7 @@ const LocationComponent = () => {
             // Set the full list of mandals
             setMandals(response);
             
-            // Filter mandals for the selected city
+            // Filter mandals for the selected Dirstict
             const filteredMandals = response.filter((mandal: any) => mandal.city === cityId);
             setCityMandals(filteredMandals);
         } catch (error) {
@@ -393,7 +393,7 @@ const LocationComponent = () => {
             try {
                 const cityDetails = await addressService.getCities(selectedCity);
                 if (!cityDetails) {
-                    errors.city = "Selected city does not exist";
+                    errors.city = "Selected district does not exist";
                 }
             } catch (err) {
                 console.error("Error fetching city details:", err);
@@ -405,10 +405,10 @@ const LocationComponent = () => {
         } else if (mandalName.trim().length < 2) {
             errors.mandalName = "Mandal name must be at least 2 characters long";
         } else {
-            // Check if mandal already exists in selected city
+            // Check if mandal already exists in selected District
             const mandalsResponse = await addressService.getMandals(selectedCity);
             if (mandalsResponse.some(mandal => mandal.name.toLowerCase() === mandalName.trim().toLowerCase())) {
-                errors.mandalName = 'This mandal already exists in the selected city';
+                errors.mandalName = 'This mandal already exists in the selected district';
             }
         }
         setValidationErrors(errors);
@@ -801,7 +801,7 @@ const LocationComponent = () => {
 
                             <TextField
                                 fullWidth
-                                label="City Name"
+                                label="District Name"
                                 value={cityName}
                                 onChange={(e) => setCityName(e.target.value)}
                                 margin="normal"
@@ -815,7 +815,7 @@ const LocationComponent = () => {
                             {selectedState && (
                                 <Box sx={{ mt: 4 }}>
                                     <Typography variant="h6" gutterBottom>
-                                        Cities in Selected State
+                                        Districts in Selected State
                                     </Typography>
                                     <Box
                                         sx={{
@@ -849,7 +849,7 @@ const LocationComponent = () => {
                                                 </Box>
                                             ))
                                         ) : (
-                                            <Typography>No cities available for this state</Typography>
+                                            <Typography>No districts available for this state</Typography>
                                         )}
                                     </Box>
                                 </Box>
@@ -904,14 +904,14 @@ const LocationComponent = () => {
                             </FormControl>
 
                             <FormControl fullWidth margin="normal" error={!!validationErrors.city}>
-                                <InputLabel>Select City</InputLabel>
+                                <InputLabel>Select District</InputLabel>
                                 <Select
                                     value={selectedCity || ''}
                                     onChange={(e) => {
                                         handleCityChange(e.target.value);
                                         setSelectedMandal(''); // Reset selected Mandal when city changes
                                     }}
-                                    label="Select City"
+                                    label="Select District"
                                 >
                                     <MenuItem value="">
                                         <em>None</em>
@@ -946,7 +946,7 @@ const LocationComponent = () => {
                             {selectedCity && (
                                 <Box sx={{ mt: 4 }}>
                                     <Typography variant="h6" gutterBottom>
-                                        Mandals in Selected City
+                                        Mandals in Selected District
                                     </Typography>
                                     <Box
                                         sx={{
@@ -1029,11 +1029,11 @@ const LocationComponent = () => {
                             </FormControl>
 
                             <FormControl fullWidth margin="normal">
-                                <InputLabel>Select City</InputLabel>
+                                <InputLabel>Select District</InputLabel>
                                 <Select
                                     value={selectedCity || ''}
                                     onChange={(e) => handleCityChange(e.target.value)}
-                                    label="Select City"
+                                    label="Select District"
                                 >
                                     <MenuItem value="">
                                         <em>None</em>
@@ -1081,7 +1081,7 @@ const LocationComponent = () => {
                             {selectedCity && (
                                 <Box sx={{ mt: 4 }}>
                                     <Typography variant="h6" gutterBottom>
-                                        Mandals in Selected City
+                                        Villages in Selected Mandal
                                     </Typography>
                                     <Box
                                         sx={{

@@ -17,7 +17,9 @@ import {
     DialogActions,
     DialogContent,
     DialogContentText,
-    DialogTitle
+    DialogTitle,
+    FormControl,
+    InputLabel
 } from '@mui/material';
 import './CoordinatorFormTable.css';
 import Navbar from '../../Components/Navbar/Navbar';
@@ -56,6 +58,7 @@ function CoordinatorFormTable() {
     const [mandals, setMandals] = useState([]);
     const [selectedMandal, setSelectedMandal] = useState('');
     const [villages, setVillages] = useState([]);
+    const [originalVillages, setOriginalVillages] = useState([]);
     const [selectedVillage, setSelectedVillage] = useState('');
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [coordinatorToDelete, setCoordinatorToDelete] = useState(null);
@@ -349,6 +352,7 @@ function CoordinatorFormTable() {
             console.log('Villages Response:', response);  // Check the response
             if (response && response) {
                 setVillages(response);
+                setOriginalVillages(response);  // Store original villages
             } else {
                 setError('No villages available');
                 toast.error('No villages available');
@@ -362,14 +366,35 @@ function CoordinatorFormTable() {
         }
     };
 
-    const handleMandalChange = async (event) => {
-        const mandalId = event.target.value;
-        setSelectedMandal(mandalId);
+    const handleMandalChange = (mandalId) => {
+        // Ensure mandalId is extracted correctly whether it's an event or direct value
+        const selectedMandalId = typeof mandalId === 'object' ? mandalId.target.value : mandalId;
+        
+        // Update form values
+        setFormValues(prev => ({
+            ...prev,
+            mandal: selectedMandalId,
+            village: '' // Reset village when mandal changes
+        }));
+        
+        // Set selected mandal
+        setSelectedMandal(selectedMandalId);
+        
+        // Reset selected village
+        setSelectedVillage('');
 
-        // Fetch villages based on selected mandal
-        const villageResponse = await fetch(`/api/villages?mandal=${mandalId}`); // Adjust API endpoint
-        const villageData = await villageResponse.json();
-        setVillages(villageData);
+        // Safely filter villages based on selected mandal
+        const filteredVillages = originalVillages.filter(village => 
+            village.mandal === selectedMandalId || 
+            (typeof village.mandal === 'object' && village.mandal?._id === selectedMandalId)
+        );
+        
+        // Update villages with filtered results
+        setVillages(filteredVillages);
+    };
+
+    const handleVillageChange = (villageId) => {
+        setSelectedVillage(villageId);
     };
 
     return (
@@ -444,37 +469,55 @@ function CoordinatorFormTable() {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <Select
-                                        value={selectedMandal}
-                                        onChange={handleMandalChange}
-                                        fullWidth
-                                        displayEmpty
-                                        sx={{ mt: 2 }}
-                                    >
-                                        <MenuItem value="" disabled>Select Mandal</MenuItem>
-                                        {mandals.map((mandal) => (
-                                            <MenuItem key={mandal._id} value={mandal._id}>
-                                                {mandal.name}
+                                    <FormControl fullWidth margin="normal">
+                                        <InputLabel>Select Mandal</InputLabel>
+                                        <Select
+                                            value={selectedMandal || ''}
+                                            onChange={(e) => handleMandalChange(e)}
+                                            label="Select Mandal"
+                                        >
+                                            <MenuItem value="">
+                                                <em>None</em>
                                             </MenuItem>
-                                        ))}
-                                    </Select>
+                                            {mandals.map((mandal) => (
+                                                <MenuItem key={mandal._id} value={mandal._id}>
+                                                    {mandal.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
                                 </div>
                                 <div className="form-group">
-                                    <Select
-                                        value={selectedVillage}
-                                        onChange={(e) => setSelectedVillage(e.target.value)}
-                                        fullWidth
-                                        displayEmpty
-                                        sx={{ mt: 2 }}
-                                        disabled={!selectedMandal} // Disable if no mandal is selected
-                                    >
-                                        <MenuItem value="" disabled>Select Village</MenuItem>
-                                        {villages.map((village) => (
-                                            <MenuItem key={village._id} value={village._id}>
-                                                {village.name}
+                                    <FormControl fullWidth margin="normal">
+                                        <InputLabel>Select Village</InputLabel>
+                                        <Select
+                                            value={selectedVillage || ''}
+                                            onChange={(e) => handleVillageChange(e.target.value)}
+                                            label="Select Village"
+                                            renderValue={(selected) => {
+                                                if (selected === '') {
+                                                    return <em>None</em>;
+                                                }
+                                                const selectedVillage = villages.find(village => village._id === selected);
+                                                return selectedVillage ? selectedVillage.name : '';
+                                            }}
+                                        >
+                                            <MenuItem value="">
+                                                <em>None</em>
                                             </MenuItem>
-                                        ))}
-                                    </Select>
+                                            {villages.length === 0 ? (
+                                                <MenuItem disabled>
+                                                    No village available
+                                                </MenuItem>
+                                            ) : (
+                                                villages.map((village) => (
+                                                    <MenuItem key={village._id} value={village._id}>
+                                                        {village.name}
+                                                    </MenuItem>
+                                                ))
+                                            )}
+                                        </Select>
+                                    </FormControl>
                                 </div>
 
                             </div>

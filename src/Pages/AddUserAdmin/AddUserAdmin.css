@@ -29,3 +29,31 @@
 .MuiFormControl-root {
   margin-bottom: 0 !important;
 }
+
+@media screen and (max-width: 600px) {
+  /* Adjust input and select heights for mobile */
+  .MuiTextField-root input,
+  .MuiSelect-root,
+  .MuiOutlinedInput-root {
+    height: 40px !important;
+    font-size: 12px !important;
+  }
+
+  /* Reduce form control margins */
+  .MuiFormControl-root {
+    margin-bottom: 10px !important;
+  }
+
+  /* Ensure full-width form controls */
+  .MuiFormControl-root,
+  .MuiTextField-root,
+  .MuiSelect-root {
+    width: 100%;
+  }
+
+  /* Adjust table cell padding */
+  .MuiTableCell-root {
+    padding: 8px !important;
+    font-size: 10px !important;
+  }
+}

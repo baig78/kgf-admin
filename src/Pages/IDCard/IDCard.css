@@ -48,6 +48,8 @@
     .details {
       padding: 10px;
       width: 175px;
+      min-width: 190px;
+      max-width: 272px;
 
       span {
         font-size: 12px;

@@ -62,7 +62,148 @@ const userService = {
         } catch (error) {
             throw error.response?.data || error.message;
         }
-    }
+    },
+
+    downloadUserPdf: async (userId, options = {}) => {
+        const { preview = true, download = false } = options;
+
+        if (!userId) {
+            console.error('Download PDF: No user ID provided');
+            throw new Error('Invalid user ID');
+        }
+
+        try {
+            console.log(`Attempting to download PDF for user ID: ${userId}`);
+            
+            const response = await axiosInstance.get(`/users/pdf/${userId}`, {
+                responseType: 'blob',
+                headers: {
+                    'Accept': 'application/pdf'
+                },
+                timeout: 10000
+            });
+            
+            // Validate response
+            if (!response.data || response.data.size === 0) {
+                throw new Error('Received empty PDF file');
+            }
+
+            // Create blob URL
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const blobUrl = window.URL.createObjectURL(blob);
+            
+            // If download is requested, trigger direct download
+            if (download) {
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.setAttribute('download', `user_${userId}_id_card.pdf`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(blobUrl);
+                return true;
+            }
+            
+            // If preview is requested (default behavior)
+            if (preview) {
+                // Create iframe to display PDF
+                const iframe = document.createElement('iframe');
+                iframe.style.width = '100%';
+                iframe.style.height = '100vh';
+                iframe.style.border = 'none';
+                iframe.src = blobUrl;
+                
+                // Create a modal or container to hold the iframe
+                const modal = document.createElement('div');
+                modal.style.position = 'fixed';
+                modal.style.top = '0';
+                modal.style.left = '0';
+                modal.style.width = '100%';
+                modal.style.height = '100%';
+                modal.style.backgroundColor = 'rgba(0,0,0,0.7)';
+                modal.style.zIndex = '1000';
+                modal.style.display = 'flex';
+                modal.style.flexDirection = 'column';
+                modal.style.justifyContent = 'center';
+                modal.style.alignItems = 'center';
+                
+                // Container for buttons
+                const buttonContainer = document.createElement('div');
+                buttonContainer.style.position = 'absolute';
+                buttonContainer.style.top = '10px';
+                buttonContainer.style.right = '10px';
+                buttonContainer.style.zIndex = '1001';
+                buttonContainer.style.display = 'flex';
+                buttonContainer.style.gap = '10px';
+                
+                // Close button
+                const closeButton = document.createElement('button');
+                closeButton.textContent = 'Close';
+                closeButton.style.padding = '10px';
+                closeButton.style.backgroundColor = '#f44336';
+                closeButton.style.color = 'white';
+                closeButton.style.border = 'none';
+                closeButton.style.borderRadius = '5px';
+                
+                // Download button
+                const downloadButton = document.createElement('button');
+                downloadButton.textContent = 'Download PDF';
+                downloadButton.style.padding = '10px';
+                downloadButton.style.backgroundColor = '#4CAF50';
+                downloadButton.style.color = 'white';
+                downloadButton.style.border = 'none';
+                downloadButton.style.borderRadius = '5px';
+                
+                // Cleanup function
+                const cleanup = () => {
+                    document.body.removeChild(modal);
+                    window.URL.revokeObjectURL(blobUrl);
+                };
+                
+                // Download function
+                const triggerDownload = () => {
+                    const link = document.createElement('a');
+                    link.href = blobUrl;
+                    link.setAttribute('download', `user_${userId}_id_card.pdf`);
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                };
+                
+                // Add event listeners
+                closeButton.addEventListener('click', cleanup);
+                downloadButton.addEventListener('click', triggerDownload);
+                
+                // Assemble and display
+                buttonContainer.appendChild(downloadButton);
+                buttonContainer.appendChild(closeButton);
+                modal.appendChild(buttonContainer);
+                modal.appendChild(iframe);
+                document.body.appendChild(modal);
+                
+                console.log(`PDF displayed for user ID: ${userId}`);
+                return true;
+            }
+            
+            // If neither preview nor download is requested
+            window.URL.revokeObjectURL(blobUrl);
+            return false;
+        } catch (error) {
+            console.error('PDF Download Error:', {
+                userId,
+                errorName: error.name,
+                errorMessage: error.message,
+                stack: error.stack,
+                ...(error.response ? {
+                    responseStatus: error.response.status,
+                    responseHeaders: error.response.headers
+                } : {})
+            });
+            
+            // Throw a more user-friendly error
+            throw new Error(`Failed to download PDF for user ${userId}. ${error.message}`);
+        }
+    },
 };
 
 // Address services
@@ -260,86 +401,9 @@ const coordinatorService = {
     }
 };
 
-// Add user PDF download service
-const downloadUserPdf = async (userId) => {
-
-    try {
-        const response = await axiosInstance.get(`/users/pdf/${userId}`, {
-            data: { userId }
-        });
-        return response.data;
-    } catch (error) {
-        throw error.response?.data || error.message;
-    }
-};
-// try {
-//     const response = await axiosInstance.get(`/users/pdf/${userId}`, {
-//         responseType: 'blob',
-//         headers: {
-//             'Accept': 'application/pdf'
-//         },
-//         // Intercept the response to handle non-PDF content
-//         transformResponse: [function (data, headers) {
-//             const contentType = headers['content-type'];
-
-//             // Log unexpected content type
-//             if (!contentType.includes('application/pdf')) {
-//                 console.error('Unexpected Content Type:', {
-//                     contentType,
-//                     dataType: typeof data,
-//                     dataLength: data?.length
-//                 });
-
-//                 // If it's HTML, try to extract error message
-//                 if (contentType.includes('text/html')) {
-//                     try {
-//                         const errorText = data instanceof Blob 
-//                             ? new TextDecoder().decode(data) 
-//                             : data;
-
-//                         console.error('HTML Error Content:', errorText);
-
-//                         // Extract potential error details
-//                         const titleMatch = errorText.match(/<title>(.*?)<\/title>/i);
-//                         const bodyMatch = errorText.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-
-//                         const errorTitle = titleMatch ? titleMatch[1] : 'Unexpected Response';
-//                         const errorBody = bodyMatch 
-//                             ? bodyMatch[1].replace(/<[^>]*>/g, '').trim() 
-//                             : 'No additional details available';
-
-//                         throw new Error(`Server Error: ${errorTitle} - ${errorBody}`);
-//                     } catch (parseError) {
-//                         console.error('Failed to parse HTML error:', parseError);
-//                         throw new Error('Received unexpected HTML response');
-//                     }
-//                 }
-//             }
-//             return data;
-//         }]
-//     });
-
-//     return response;
-// } catch (error) {
-//     // Enhanced error logging
-//     console.error('PDF Download Error:', {
-//         errorName: error.name,
-//         errorMessage: error.message,
-//         response: error.response ? {
-//             status: error.response.status,
-//             headers: error.response.headers,
-//             data: error.response.data
-//         } : null
-//     });
-
-//     throw error;
-// }
-
-
 export {
     authService,
     userService,
     addressService,
-    coordinatorService,
-    downloadUserPdf
+    coordinatorService
 };
