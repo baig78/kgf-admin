@@ -56,6 +56,7 @@ function CoordinatorFormTable() {
     const [mandals, setMandals] = useState([]);
     const [selectedMandal, setSelectedMandal] = useState('');
     const [villages, setVillages] = useState([]);
+    const [originalVillages, setOriginalVillages] = useState([]);
     const [selectedVillage, setSelectedVillage] = useState('');
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [coordinatorToDelete, setCoordinatorToDelete] = useState(null);
@@ -349,6 +350,7 @@ function CoordinatorFormTable() {
             console.log('Villages Response:', response);  // Check the response
             if (response && response) {
                 setVillages(response);
+                setOriginalVillages(response);  // Store original villages
             } else {
                 setError('No villages available');
                 toast.error('No villages available');
@@ -362,14 +364,21 @@ function CoordinatorFormTable() {
         }
     };
 
-    const handleMandalChange = async (event) => {
+    const handleMandalChange = (event) => {
         const mandalId = event.target.value;
         setSelectedMandal(mandalId);
 
-        // Fetch villages based on selected mandal
-        const villageResponse = await fetch(`/api/villages?mandal=${mandalId}`); // Adjust API endpoint
-        const villageData = await villageResponse.json();
-        setVillages(villageData);
+        // Safely filter villages based on selected mandal
+        const filteredVillages = originalVillages.filter(village => 
+            village.mandal === mandalId || 
+            (typeof village.mandal === 'object' && village.mandal?._id === mandalId)
+        );
+        
+        // Update villages with filtered results
+        setVillages(filteredVillages);
+
+        // Reset selected village when mandal changes
+        setSelectedVillage('');
     };
 
     return (
