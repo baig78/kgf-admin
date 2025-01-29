@@ -19,7 +19,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 export default function UserList() {
     const [data, setData] = useState([]);
     const [page, setPage] = useState(1);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(1000);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [filteredRows, setFilteredRows] = useState([]);
@@ -104,23 +104,7 @@ export default function UserList() {
         XLSX.writeFile(workbook, "user_data.xlsx");
     };
 
-    const exportToPDF = () => {
-        const dataToExport = filteredRows.length > 0 ? filteredRows : processedData;
 
-        const doc = new jsPDF();
-        const columns = [
-            "ID", "Surname", "Name", "Gothram", "Mobile", "Date of Birth",
-            "Gender", "Resident Type", "State", "City", "Country", "Address"
-        ];
-
-        const rows = dataToExport.map((row) => [
-            row.id, row.surname, row.name, row.gothram, row.mobile, row.dob,
-            row.gender, row.residentType, row.state, row.city, row.country, row.address
-        ]);
-
-        doc.autoTable({ head: [columns], body: rows });
-        doc.save("user_data.pdf");
-    };
 
     const handleDownloadPdf = async (userId, download = false) => {
         if (!userId) {
@@ -173,6 +157,85 @@ export default function UserList() {
         setopenCardDialog(true);
     };
 
+    const createAlignedPDFWithUserData = () => {
+        try {
+            // Validate data before PDF creation
+            if (!data || data.length === 0) {
+                toast.warn('No user data available');
+                return;
+            }
+
+            // Create a new jsPDF document in landscape mode
+            const doc = new jsPDF({
+                orientation: 'landscape',
+                unit: 'pt',
+                format: 'a4'
+            });
+
+            // Set document properties
+            doc.setFont('helvetica');
+            doc.setFontSize(12);
+
+            // Add title
+            doc.setFontSize(18);
+            doc.text('KGF Admin - Member List', 50, 50);
+
+            // Add timestamp
+            doc.setFontSize(10);
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 50, 70);
+
+            // Add summary statistics
+            doc.text(`Total Members: ${data.length}`, 50, 90);
+
+            // Table headers matching the exact user object
+            const headers = [
+                'S.No', 'surname', 'name', 'gothram', 'mobile', 
+                'dob', 'gender', 'residentType', 'state', 
+                'country', 'memberShip', 'createdAt'
+            ];
+
+            // Prepare table data with serial number
+            const tableData = data.map((user, index) => [
+                index + 1, // Serial number starting from 1
+                user.surname || 'N/A',
+                user.name || 'N/A',
+                user.gothram || 'N/A',
+                user.mobile || 'N/A',
+                user.dob ? new Date(user.dob).toLocaleDateString() : 'N/A',
+                user.gender || 'N/A',
+                user.residentType || 'N/A',
+                user.state || 'N/A',
+                user.country || 'N/A',
+                user.memberShip || 'N/A',
+                user.createdAt ? new Date(user.createdAt).toLocaleString() : 'N/A'
+            ]);
+
+            // Generate table
+            doc.autoTable({
+                startY: 110,
+                head: [headers],
+                body: tableData,
+                theme: 'striped',
+                styles: { 
+                    fontSize: 8,
+                    cellPadding: 3,
+                    overflow: 'linebreak'
+                },
+                columnStyles: { 
+                    0: { cellWidth: 40 },   // S.No column
+                    1: { cellWidth: 60 },   // surname column
+                    2: { cellWidth: 60 }    // name column
+                }
+            });
+
+            // Save the PDF
+            doc.save(`member_list_${new Date().toISOString().split('T')[0]}.pdf`);
+        } catch (error) {
+            console.error('PDF generation error:', error);
+            toast.error(`Failed to generate PDF: ${error.message}`);
+        }
+    };
+
     const columns = [
         {
             field: 'photo',
@@ -221,18 +284,18 @@ export default function UserList() {
                     label="View ID Card"
                     onClick={() => handleViewCard(params.row)}
                 />,
-                // <GridActionsCellItem
-                //     key={`download-${params.row.id}`}
-                //     icon={<DownloadIcon />}
-                //     label="Download ID Card"
-                //     onClick={() => handleDownloadPdf(params.row.id, true)}
-                // />,
-                // <GridActionsCellItem
-                //     key={`preview-${params.row.id}`}
-                //     icon={<PictureAsPdfIcon />}
-                //     label="Preview ID Card"
-                //     onClick={() => handleDownloadPdf(params.row.id)}
-                // />
+                <GridActionsCellItem
+                    key={`download-${params.row.id}`}
+                    icon={<DownloadIcon />}
+                    label="Download ID Card"
+                    onClick={() => handleDownloadPdf(params.row.id, true)}
+                />,
+                <GridActionsCellItem
+                    key={`preview-${params.row.id}`}
+                    icon={<PictureAsPdfIcon />}
+                    label="Preview ID Card"
+                    onClick={() => handleDownloadPdf(params.row.id)}
+                />
             ]
         },
     ];
@@ -270,16 +333,13 @@ export default function UserList() {
                 >
                     {!isMobile && 'Export Excel'}
                 </Button>
-                <Button
-                    variant="text"
-                    onClick={exportToPDF}
-                    startIcon={<PictureAsPdfIcon />}
-                    sx={{ 
-                        minWidth: isMobile ? 'auto' : undefined,
-                        padding: isMobile ? '6px 8px' : undefined
-                    }}
+              
+                <Button 
+                    startIcon={<PictureAsPdfIcon />} 
+                    onClick={createAlignedPDFWithUserData}
                 >
-                    {!isMobile && 'Export PDF'}
+                                        {!isMobile && 'Export PDF'}
+
                 </Button>
             </GridToolbarContainer>
         );
