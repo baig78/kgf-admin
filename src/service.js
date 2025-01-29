@@ -88,13 +88,43 @@ const userService = {
                 throw new Error('Received empty HTML content');
             }
 
+            // Create a wrapper div to center the content
+            const element = document.createElement('div');
+            element.style.display = 'flex';
+            element.style.justifyContent = 'center';
+            element.style.alignItems = 'center';
+            element.style.minHeight = '100vh';
+            element.style.margin = '0';
+            element.style.padding = '0';
+
+            // Create inner div to preserve original HTML
+            const innerDiv = document.createElement('div');
+            innerDiv.innerHTML = response.data;
+            
+            // Optional: Add additional centering styles to the inner content
+            innerDiv.style.maxWidth = '100%';
+            innerDiv.style.textAlign = 'center';
+
+            element.appendChild(innerDiv);
+            
             // If download is requested, convert HTML to PDF
             if (download) {
-                const element = document.createElement('div');
-                element.innerHTML = response.data;
-                
-                // Use html2pdf to convert HTML to PDF
-                html2pdf().from(element).save(`user_${userId}_id_card.pdf`);
+                const pdfOptions = {
+                    margin: [10, 10, 10, 10],
+                    filename: `user_${userId}_id_card.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { 
+                        scale: 2, 
+                        useCORS: true 
+                    },
+                    jsPDF: { 
+                        unit: 'mm', 
+                        format: 'a4', 
+                        orientation: 'portrait' 
+                    }
+                };
+
+                html2pdf().set(pdfOptions).from(element).save();
                 return true;
             }
             
@@ -120,6 +150,9 @@ const userService = {
                 contentWrapper.style.maxWidth = '90%';
                 contentWrapper.style.maxHeight = '90%';
                 contentWrapper.style.overflow = 'auto';
+                contentWrapper.style.display = 'flex';
+                contentWrapper.style.justifyContent = 'center';
+                contentWrapper.style.alignItems = 'center';
                 
                 // Close button
                 const closeButton = document.createElement('button');
@@ -152,9 +185,22 @@ const userService = {
                 
                 // Download function
                 const triggerDownload = () => {
-                    const element = document.createElement('div');
-                    element.innerHTML = response.data;
-                    html2pdf().from(element).save(`user_${userId}_id_card.pdf`);
+                    const pdfOptions = {
+                        margin: [10, 10, 10, 10],
+                        filename: `user_${userId}_id_card.pdf`,
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { 
+                            scale: 2, 
+                            useCORS: true 
+                        },
+                        jsPDF: { 
+                            unit: 'mm', 
+                            format: 'a4', 
+                            orientation: 'portrait' 
+                        }
+                    };
+
+                    html2pdf().set(pdfOptions).from(element).save();
                 };
                 
                 // Add event listeners
@@ -162,7 +208,7 @@ const userService = {
                 downloadButton.addEventListener('click', triggerDownload);
                 
                 // Assemble and display
-                contentWrapper.innerHTML = response.data;
+                contentWrapper.appendChild(innerDiv);
                 modal.appendChild(downloadButton);
                 modal.appendChild(closeButton);
                 modal.appendChild(contentWrapper);

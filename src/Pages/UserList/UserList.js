@@ -296,12 +296,12 @@ export default function UserList() {
             headerName: 'Actions',
             width: 130,
             getActions: (params) => [
-                <GridActionsCellItem
-                    key={`view-${params.row.id}`}
-                    icon={<ViewIcon />}
-                    label="View ID Card"
-                    onClick={() => handleViewCard(params.row)}
-                />,
+                // <GridActionsCellItem
+                //     key={`view-${params.row.id}`}
+                //     icon={<ViewIcon />}
+                //     label="View ID Card"
+                //     onClick={() => handleViewCard(params.row)}
+                // />,
                 <GridActionsCellItem
                     key={`download-${params.row.id}`}
                     icon={<DownloadIcon />}
