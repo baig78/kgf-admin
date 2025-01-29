@@ -32,8 +32,7 @@ const CardFront = ({ cardDetails }) => {
                             </div>
                             <div className="row">
                                 <span>Membership No:</span>
-                                {/* <span>{cardDetails.memberShip}</span> */}
-                                <span>KGF-M50001</span>
+                                <span>{cardDetails.membershipNo}</span>
                             </div>
                             <div className="row">
                                 <span>State:</span>
@@ -86,9 +85,10 @@ const CardFront = ({ cardDetails }) => {
 
 CardFront.propTypes = {
     cardDetails: PropTypes.shape({
-        photo: PropTypes.string.isRequired,
-        name: PropTypes.string.isRequired,
-        state: PropTypes.string.isRequired
+        name: PropTypes.string,
+        membershipNo: PropTypes.string,
+        state: PropTypes.string,
+        photo: PropTypes.string
     }).isRequired
 };
 

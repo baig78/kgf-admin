@@ -65,6 +65,7 @@ export default function UserList() {
             city: user.city,
             country: user.country,
             address: user.address,
+            membershipNo: user.memberShip
         })), [data]);
 
     const handleImageClick = (imageUrl, rowData) => {
@@ -178,7 +179,7 @@ export default function UserList() {
 
             // Add title
             doc.setFontSize(18);
-            doc.text('KGF Admin - Member List', 50, 50);
+            doc.text('KGF - Member List', 50, 50);
 
             // Add timestamp
             doc.setFontSize(10);
@@ -284,18 +285,18 @@ export default function UserList() {
                     label="View ID Card"
                     onClick={() => handleViewCard(params.row)}
                 />,
-                <GridActionsCellItem
-                    key={`download-${params.row.id}`}
-                    icon={<DownloadIcon />}
-                    label="Download ID Card"
-                    onClick={() => handleDownloadPdf(params.row.id, true)}
-                />,
-                <GridActionsCellItem
-                    key={`preview-${params.row.id}`}
-                    icon={<PictureAsPdfIcon />}
-                    label="Preview ID Card"
-                    onClick={() => handleDownloadPdf(params.row.id)}
-                />
+                // <GridActionsCellItem
+                //     key={`download-${params.row.id}`}
+                //     icon={<DownloadIcon />}
+                //     label="Download ID Card"
+                //     onClick={() => handleDownloadPdf(params.row.id, true)}
+                // />,
+                // <GridActionsCellItem
+                //     key={`preview-${params.row.id}`}
+                //     icon={<PictureAsPdfIcon />}
+                //     label="Preview ID Card"
+                //     onClick={() => handleDownloadPdf(params.row.id)}
+                // />
             ]
         },
     ];
