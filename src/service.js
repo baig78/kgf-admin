@@ -1,4 +1,5 @@
 import axios from 'axios';
+import html2pdf from 'html2pdf.js';
 
 const API_BASE_URL = 'https://kgf-rwfd.onrender.com/api/v1';
 
@@ -76,44 +77,30 @@ const userService = {
             console.log(`Attempting to download PDF for user ID: ${userId}`);
             
             const response = await axiosInstance.get(`/users/pdf/${userId}`, {
-                responseType: 'blob',
                 headers: {
-                    'Accept': 'application/pdf'
+                    'Accept': 'text/html'
                 },
                 timeout: 10000
             });
             
             // Validate response
-            if (!response.data || response.data.size === 0) {
-                throw new Error('Received empty PDF file');
+            if (!response.data) {
+                throw new Error('Received empty HTML content');
             }
 
-            // Create blob URL
-            const blob = new Blob([response.data], { type: 'application/pdf' });
-            const blobUrl = window.URL.createObjectURL(blob);
-            
-            // If download is requested, trigger direct download
+            // If download is requested, convert HTML to PDF
             if (download) {
-                const link = document.createElement('a');
-                link.href = blobUrl;
-                link.setAttribute('download', `user_${userId}_id_card.pdf`);
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-                window.URL.revokeObjectURL(blobUrl);
+                const element = document.createElement('div');
+                element.innerHTML = response.data;
+                
+                // Use html2pdf to convert HTML to PDF
+                html2pdf().from(element).save(`user_${userId}_id_card.pdf`);
                 return true;
             }
             
             // If preview is requested (default behavior)
             if (preview) {
-                // Create iframe to display PDF
-                const iframe = document.createElement('iframe');
-                iframe.style.width = '100%';
-                iframe.style.height = '100vh';
-                iframe.style.border = 'none';
-                iframe.src = blobUrl;
-                
-                // Create a modal or container to hold the iframe
+                // Create modal to display HTML content
                 const modal = document.createElement('div');
                 modal.style.position = 'fixed';
                 modal.style.top = '0';
@@ -123,22 +110,23 @@ const userService = {
                 modal.style.backgroundColor = 'rgba(0,0,0,0.7)';
                 modal.style.zIndex = '1000';
                 modal.style.display = 'flex';
-                modal.style.flexDirection = 'column';
                 modal.style.justifyContent = 'center';
                 modal.style.alignItems = 'center';
+                modal.style.overflow = 'auto';
                 
-                // Container for buttons
-                const buttonContainer = document.createElement('div');
-                buttonContainer.style.position = 'absolute';
-                buttonContainer.style.top = '10px';
-                buttonContainer.style.right = '10px';
-                buttonContainer.style.zIndex = '1001';
-                buttonContainer.style.display = 'flex';
-                buttonContainer.style.gap = '10px';
+                const contentWrapper = document.createElement('div');
+                contentWrapper.style.backgroundColor = 'white';
+                contentWrapper.style.padding = '20px';
+                contentWrapper.style.maxWidth = '90%';
+                contentWrapper.style.maxHeight = '90%';
+                contentWrapper.style.overflow = 'auto';
                 
                 // Close button
                 const closeButton = document.createElement('button');
                 closeButton.textContent = 'Close';
+                closeButton.style.position = 'absolute';
+                closeButton.style.top = '10px';
+                closeButton.style.right = '10px';
                 closeButton.style.padding = '10px';
                 closeButton.style.backgroundColor = '#f44336';
                 closeButton.style.color = 'white';
@@ -148,6 +136,9 @@ const userService = {
                 // Download button
                 const downloadButton = document.createElement('button');
                 downloadButton.textContent = 'Download PDF';
+                downloadButton.style.position = 'absolute';
+                downloadButton.style.top = '10px';
+                downloadButton.style.right = '100px';
                 downloadButton.style.padding = '10px';
                 downloadButton.style.backgroundColor = '#4CAF50';
                 downloadButton.style.color = 'white';
@@ -157,17 +148,13 @@ const userService = {
                 // Cleanup function
                 const cleanup = () => {
                     document.body.removeChild(modal);
-                    window.URL.revokeObjectURL(blobUrl);
                 };
                 
                 // Download function
                 const triggerDownload = () => {
-                    const link = document.createElement('a');
-                    link.href = blobUrl;
-                    link.setAttribute('download', `user_${userId}_id_card.pdf`);
-                    document.body.appendChild(link);
-                    link.click();
-                    link.remove();
+                    const element = document.createElement('div');
+                    element.innerHTML = response.data;
+                    html2pdf().from(element).save(`user_${userId}_id_card.pdf`);
                 };
                 
                 // Add event listeners
@@ -175,29 +162,23 @@ const userService = {
                 downloadButton.addEventListener('click', triggerDownload);
                 
                 // Assemble and display
-                buttonContainer.appendChild(downloadButton);
-                buttonContainer.appendChild(closeButton);
-                modal.appendChild(buttonContainer);
-                modal.appendChild(iframe);
+                contentWrapper.innerHTML = response.data;
+                modal.appendChild(downloadButton);
+                modal.appendChild(closeButton);
+                modal.appendChild(contentWrapper);
                 document.body.appendChild(modal);
                 
-                console.log(`PDF displayed for user ID: ${userId}`);
+                console.log(`HTML content displayed for user ID: ${userId}`);
                 return true;
             }
             
-            // If neither preview nor download is requested
-            window.URL.revokeObjectURL(blobUrl);
             return false;
         } catch (error) {
             console.error('PDF Download Error:', {
                 userId,
                 errorName: error.name,
                 errorMessage: error.message,
-                stack: error.stack,
-                ...(error.response ? {
-                    responseStatus: error.response.status,
-                    responseHeaders: error.response.headers
-                } : {})
+                stack: error.stack
             });
             
             // Throw a more user-friendly error
