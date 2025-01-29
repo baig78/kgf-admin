@@ -84,58 +84,75 @@ export default function UserList() {
     const exportToExcel = () => {
         const dataToExport = filteredRows.length > 0 ? filteredRows : processedData;
 
-        const formattedData = dataToExport.map((row) => ({
-            ID: row.id,
-            Surname: row.surname,
-            Name: row.name,
-            Gothram: row.gothram,
-            Mobile: row.mobile,
-            DOB: row.dob,
-            Gender: row.gender,
-            ResidentType: row.residentType,
-            State: row.state,
-            City: row.city,
-            Country: row.country,
-            Address: row.address,
+        const formattedData = dataToExport.map((item, index) => ({
+          'Serial No.': index + 1, 
+          'ID': item.id,
+          'Surname': item.surname,
+          'Name': item.name,
+          'Gothram': item.gothram,
+          'Mobile': item.mobile,
+          'DOB': item.dob,
+          'Gender': item.gender,
+          'ResidentType': item.residentType,
+          'State': item.state,
+          'City': item.city,
+          'Country': item.country,
+          'Address': item.address,
         }));
 
         const worksheet = XLSX.utils.json_to_sheet(formattedData);
+        
+        // Auto-adjust column widths and add center alignment for Serial No.
+        const columnWidths = formattedData.reduce((widths, row) => {
+          Object.keys(row).forEach((key, index) => {
+            const cellValue = row[key] ? String(row[key]) : '';
+            const cellLength = cellValue.length;
+            widths[index] = Math.max(widths[index] || 0, cellLength, key.length);
+          });
+          return widths;
+        }, []);
+
+        worksheet['!cols'] = columnWidths.map(width => ({ wch: width + 2 })); // Add 2 for padding
+
+        // Add center alignment for Serial No. column
+        if (!worksheet['!ref']) return;
+        const range = XLSX.utils.decode_range(worksheet['!ref']);
+        for (let row = range.s.r + 1; row <= range.e.r; row++) {
+          const cellAddress = XLSX.utils.encode_cell({c: 0, r: row});
+          if (worksheet[cellAddress]) {
+            worksheet[cellAddress].s = {
+              alignment: {
+                horizontal: 'center'
+              }
+            };
+          }
+        }
+
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "User Data");
         XLSX.writeFile(workbook, "user_data.xlsx");
     };
 
-
+    // const [htmlContent, setHtmlContent] = useState("");
 
     const handleDownloadPdf = async (userId, download = false) => {
         if (!userId) {
-            toast.error('Invalid user ID');
+            alert("No user selected");
             return;
         }
 
         try {
-            await userService.downloadUserPdf(userId, { 
+            const result = await userService.downloadUserPdf(userId, { 
                 preview: !download, 
                 download 
             });
+            
+            if (result) {
+                console.log("PDF processed successfully");
+            }
         } catch (error) {
             console.error(`PDF Download Error for User ID: ${userId}`, error);
-            
-            // Extract the specific error message
-            const errorMessage = error.message || 'Failed to download PDF';
-            
-            // More specific error handling
-            if (errorMessage.includes('Server Error: KGF Card')) {
-                toast.error('Unable to generate PDF. Please contact system administrator.');
-            } else if (errorMessage.includes('authentication') || errorMessage.includes('authorization')) {
-                toast.warn('Please log in again to download the PDF.');
-            } else if (errorMessage.includes('timeout') || errorMessage.includes('network')) {
-                toast.error('Network error. Please check your internet connection and try again.');
-            } else if (errorMessage.includes('empty PDF file')) {
-                toast.error('The generated PDF is empty. Please contact support.');
-            } else {
-                toast.error(`PDF Download Failed: ${errorMessage}`);
-            }
+            alert(`Failed to download PDF: ${error.message}`);
         }
     };
 
@@ -279,18 +296,18 @@ export default function UserList() {
             headerName: 'Actions',
             width: 130,
             getActions: (params) => [
-                <GridActionsCellItem
-                    key={`view-${params.row.id}`}
-                    icon={<ViewIcon />}
-                    label="View ID Card"
-                    onClick={() => handleViewCard(params.row)}
-                />,
                 // <GridActionsCellItem
-                //     key={`download-${params.row.id}`}
-                //     icon={<DownloadIcon />}
-                //     label="Download ID Card"
-                //     onClick={() => handleDownloadPdf(params.row.id, true)}
+                //     key={`view-${params.row.id}`}
+                //     icon={<ViewIcon />}
+                //     label="View ID Card"
+                //     onClick={() => handleViewCard(params.row)}
                 // />,
+                <GridActionsCellItem
+                    key={`download-${params.row.id}`}
+                    icon={<DownloadIcon />}
+                    label="Download ID Card"
+                    onClick={() => handleDownloadPdf(params.row.id, true)}
+                />,
                 // <GridActionsCellItem
                 //     key={`preview-${params.row.id}`}
                 //     icon={<PictureAsPdfIcon />}
