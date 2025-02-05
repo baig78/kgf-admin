@@ -1,7 +1,8 @@
 import axios from 'axios';
 import html2pdf from 'html2pdf.js';
 
-const API_BASE_URL = 'https://kgf-rwfd.onrender.com/api/v1';
+// const API_BASE_URL = 'https://kgf-rwfd.onrender.com/api/v1';
+const API_BASE_URL = 'https://kgfadmin.kammaglobal.com/api/v1';
 
 // Create axios instance with default config
 const axiosInstance = axios.create({
