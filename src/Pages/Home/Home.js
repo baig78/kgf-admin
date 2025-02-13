@@ -118,7 +118,7 @@ const Home = () => {
     return (
         <div className='home-page'>
             <Navbar />
-            <Box className="container" p={3}>
+            <Box className="container" >
                 <Typography variant="h4" gutterBottom>
                     Total Registrations: {registrations.total}
                 </Typography>

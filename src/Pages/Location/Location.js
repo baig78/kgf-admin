@@ -3,7 +3,7 @@ import Navbar from "../../Components/Navbar/Navbar";
 import FooterComp from "../../Components/FooterComp/FooterComp";
 import './Location.css';
 import { addressService } from '../../service';
-import { Button, Container, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Box, Accordion, AccordionSummary, AccordionDetails, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton } from '@mui/material';
+import { Button,  Typography, TextField, Select, MenuItem, FormControl, InputLabel, Box, Accordion, AccordionSummary, AccordionDetails, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -586,11 +586,6 @@ const LocationComponent = () => {
     return (
         <>
             <Navbar />
-            <Container maxWidth="md" sx={{ py: 4 }}>
-                <Typography variant="h4" component="h2" gutterBottom>
-                    Create Location
-                </Typography>
-
                 {loading && (
                     <Box display="flex" justifyContent="center" my={4}>
                         <CircularProgress />
@@ -602,7 +597,8 @@ const LocationComponent = () => {
                         {error}
                     </Typography>
                 )}
-
+                <div className="title">Create Location</div>
+                <div className="coordinator-form-table">
                 <Box sx={{ mb: 4 }}>
                     <Accordion expanded={expandedAccordion === 'country'} onChange={() => setExpandedAccordion(expandedAccordion === 'country' ? null : 'country')}>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -1128,7 +1124,12 @@ const LocationComponent = () => {
                         </AccordionDetails>
                     </Accordion>
                 </Box>
-            </Container>
+                </div>
+                <div>
+                    test tab
+                </div>
+
+                
             <FooterComp />
             <ToastContainer position="top-right" autoClose={1000} />
             <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
