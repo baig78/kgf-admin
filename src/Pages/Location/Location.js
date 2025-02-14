@@ -3,11 +3,15 @@ import Navbar from "../../Components/Navbar/Navbar";
 import FooterComp from "../../Components/FooterComp/FooterComp";
 import './Location.css';
 import { addressService } from '../../service';
-import { Button,  Typography, TextField, Select, MenuItem, FormControl, InputLabel, Box, Accordion, AccordionSummary, AccordionDetails, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton } from '@mui/material';
+import { Button,  Typography, TextField, Select, MenuItem, FormControl, InputLabel, Box, Accordion, AccordionSummary, AccordionDetails, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Tabs, Tab } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import * as XLSX from "xlsx";
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+
 
 const LocationComponent = () => {
     const [loading, setLoading] = useState(false);
@@ -41,6 +45,8 @@ const LocationComponent = () => {
     const [mandalToDelete, setMandalToDelete] = useState(null);
     const [cityMandals, setCityMandals] = useState([]);
     const [cityVillages, setCityVillages] = useState([]);
+    const [fileLoading, setFileLoading] = useState(false);
+    const [selectedFileName, setSelectedFileName] = useState(null);
 
     const resetLocationForm = () => {
         setCountryName('');
@@ -296,10 +302,10 @@ const LocationComponent = () => {
     const fetchVillages = async (mandalId) => {
         try {
             const response = await addressService.getVillages(mandalId); // Fetch villages for a specific mandal
-            
+
             // Set the full list of villages
             setVillages(response);
-            
+
             // Filter villages for the selected mandal
             const filteredVillages = response.filter((village: any) => village.mandal === mandalId);
             setCityVillages(filteredVillages);
@@ -308,11 +314,6 @@ const LocationComponent = () => {
             setCityVillages([]); // Ensure cityVillages is reset on error
         }
     };
-
-    // useEffect(() => {
-    //     fetchMandals();
-    // }, []);
-
 
     const validateVillageData = async () => {
         const errors = {};
@@ -371,10 +372,10 @@ const LocationComponent = () => {
         try {
             const response = await addressService.getMandals(cityId);
             console.log(response, '-----m');
-            
+
             // Set the full list of mandals
             setMandals(response);
-            
+
             // Filter mandals for the selected Dirstict
             const filteredMandals = response.filter((mandal: any) => mandal.city === cityId);
             setCityMandals(filteredMandals);
@@ -583,560 +584,814 @@ const LocationComponent = () => {
         }
     };
 
+    const [value, setValue] = useState(0);
+
+    const handleChange = (event, newValue) => {
+        setValue(newValue);
+    };
+
+    const handleFileUpload = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            setSelectedFileName(file.name);
+            setFileLoading(true);
+
+            const reader = new FileReader();
+            reader.readAsBinaryString(file);
+
+            reader.onload = (e) => {
+                try {
+                    const data = e.target.result;
+                    const workbook = XLSX.read(data, { type: "binary" });
+
+                    // Assuming data is in the first sheet
+                    const sheetName = workbook.SheetNames[0];
+                    const sheet = workbook.Sheets[sheetName];
+
+                    // Convert sheet data to JSON
+                    const rawData = XLSX.utils.sheet_to_json(sheet);
+                    const formattedData = transformData(rawData);
+
+                    console.log('----------:', formattedData);
+
+                    // Success toast
+                    toast.success('Excel file uploaded successfully!', {
+                        position: "top-right",
+                        autoClose: 3000,
+                    });
+                } catch (error) {
+                    // Error toast
+                    toast.error('Error uploading Excel file', {
+                        position: "top-right",
+                        autoClose: 3000,
+                    });
+                    console.error('File upload error:', error);
+                } finally {
+                    // Stop loading
+                    setFileLoading(false);
+                }
+            };
+
+            reader.onerror = (error) => {
+                // Error toast
+                toast.error('Error reading file', {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
+                console.error('File read error:', error);
+                setFileLoading(false);
+            };
+        }
+    };
+
+    const handleDownloadTemplate = () => {
+        const template = [
+            ["State", "District", "Mandal", "Village"],
+            ["Telangana", "Hyderabad", "Mandal1", "Village1"],
+            ["Telangana", "Hyderabad", "Mandal1", "Village2"],
+            ["Telangana", "Hyderabad", "Mandal2", "Village3"],
+            ["Telangana", "Hyderabad", "Mandal2", "Village4"],
+        ];
+
+        const ws = XLSX.utils.aoa_to_sheet(template);
+        
+        // Make header row bold
+        if (ws['!cols']) {
+            ws['!cols'] = ws['!cols'] || [];
+        }
+        ws['A1'].s = { font: { bold: true } };
+        ws['B1'].s = { font: { bold: true } };
+        ws['C1'].s = { font: { bold: true } };
+        ws['D1'].s = { font: { bold: true } };
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+        const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = URL.createObjectURL(data);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'sample_template.xlsx';
+        a.click();
+    };
+
+    // Function to transform flat Excel data into hierarchical JSON
+    const transformData = (data) => {
+        const result = { state: "TS", districts: [] };
+
+        data.forEach(({ State, District, Mandal, Village }) => {
+            let districtObj = result.districts.find((d) => d.district === District);
+            if (!districtObj) {
+                districtObj = { district: District, mandals: [] };
+                result.districts.push(districtObj);
+            }
+
+            let mandalObj = districtObj.mandals.find((m) => m.mandal === Mandal);
+            if (!mandalObj) {
+                mandalObj = { mandal: Mandal, villages: [] };
+                districtObj.mandals.push(mandalObj);
+            }
+
+            if (!mandalObj.villages.some((v) => v.village === Village)) {
+                mandalObj.villages.push({ village: Village });
+            }
+        });
+
+        return result;
+    };
+
+    const boxStyles = {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        p: 3,
+        border: '2px dashed',
+        borderColor: 'primary.main',
+        borderRadius: 2,
+        backgroundColor: '#ffffff',
+        width: 350,
+        height: 180,
+        gap: 2,
+        textAlign: 'center'
+        
+    };
+
+
+
     return (
         <>
             <Navbar />
-                {loading && (
-                    <Box display="flex" justifyContent="center" my={4}>
-                        <CircularProgress />
-                    </Box>
-                )}
+            {loading && (
+                <Box display="flex" justifyContent="center" my={4}>
+                    <CircularProgress />
+                </Box>
+            )}
 
-                {error && (
-                    <Typography color="error" gutterBottom>
-                        {error}
-                    </Typography>
-                )}
-                <div className="title">Create Location</div>
-                <div className="coordinator-form-table">
-                <Box sx={{ mb: 4 }}>
-                    <Accordion expanded={expandedAccordion === 'country'} onChange={() => setExpandedAccordion(expandedAccordion === 'country' ? null : 'country')}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                            <Typography variant="h6">Create Country</Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            <TextField
-                                fullWidth
-                                label="Country Name"
-                                value={countryName}
-                                onChange={(e) => setCountryName(e.target.value)}
-                                margin="normal"
-                                error={!!validationErrors.countryName}
-                                helperText={validationErrors.countryName}
-                            />
-                            <Button variant="contained" onClick={createCountry} sx={{ mt: 2 }}>
-                                Submit
-                            </Button>
+            {error && (
+                <Typography color="error" gutterBottom>
+                    {error}
+                </Typography>
+            )}
+            <div className="title">Create Location</div>
 
-                            {expandedAccordion === 'country' && countries.length > 0 && (
-                                <Box sx={{ mt: 4 }}>
-                                    <Typography variant="h6" gutterBottom>
-                                        All Countries
-                                    </Typography>
-                                    <Box
-                                        sx={{
-                                            display: 'flex',
-                                            flexWrap: 'wrap',
-                                            gap: 1,
-                                        }}
-                                    >
-                                        {countries.sort((a, b) => a.name.localeCompare(b.name)).map((country) => (
+
+            <Box sx={{ width: "1400px", margin: "auto" }}>
+                <Tabs value={value} onChange={handleChange} aria-label="mui tabs" >
+                    <Tab label="Enter Location Manually" sx={{ textTransform: "capitalize" }} />
+                    <Tab label="Upload CSV" sx={{ textTransform: "capitalize" }} />
+                </Tabs>
+
+                <Box sx={{ p: 2 }}>
+                    {value === 0 && <div className="coordinator-form-table" style={{ padding: "0px" }}>
+                        <Box sx={{ mb: 4 }}>
+                            <Accordion expanded={expandedAccordion === 'country'} onChange={() => setExpandedAccordion(expandedAccordion === 'country' ? null : 'country')}>
+                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                    <Typography sx={{ borderRadius: 0, fontSize: '1rem' }} variant="h6">Create Country</Typography>
+                                </AccordionSummary>
+                                <AccordionDetails>
+                                    <TextField
+                                        fullWidth
+                                        label="Country Name"
+                                        value={countryName}
+                                        onChange={(e) => setCountryName(e.target.value)}
+                                        margin="normal"
+                                        error={!!validationErrors.countryName}
+                                        helperText={validationErrors.countryName}
+                                    />
+                                    <Button variant="contained" onClick={createCountry} sx={{ mt: 2 }}>
+                                        Submit
+                                    </Button>
+
+                                    {expandedAccordion === 'country' && countries.length > 0 && (
+                                        <Box sx={{ mt: 4 }}>
+                                            <Typography sx={{  fontSize: '1rem' }} variant="h6" gutterBottom>
+                                                All Countries
+                                            </Typography>
                                             <Box
-                                                key={country.id}
                                                 sx={{
-                                                    border: '1px solid #ccc',
-                                                    borderRadius: 10,
-                                                    paddingLeft: 1,
-                                                    paddingRight: 1,
                                                     display: 'flex',
-                                                    alignItems: 'center',
-                                                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                                    flexWrap: 'wrap',
+                                                    gap: 1,
                                                 }}
                                             >
-                                                <Typography sx={{ marginRight: 1 }}>{country.name}</Typography>
-                                                <IconButton
-                                                    onClick={() => handleDeleteCountry(country.name)}
-                                                    size="small"
-                                                    color="error"
-                                                >
-                                                    <CloseIcon />
-                                                </IconButton>
+                                                {countries.sort((a, b) => a.name.localeCompare(b.name)).map((country) => (
+                                                    <Box
+                                                        key={country.id}
+                                                        sx={{
+                                                            border: '1px solid #ccc',
+                                                            borderRadius: 10,
+                                                            paddingLeft: 1,
+                                                            paddingRight: 1,
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                                        }}
+                                                    >
+                                                        <Typography sx={{ marginRight: 1 }}>{country.name}</Typography>
+                                                        <IconButton
+                                                            onClick={() => handleDeleteCountry(country.name)}
+                                                            size="small"
+                                                            color="error"
+                                                        >
+                                                            <CloseIcon />
+                                                        </IconButton>
+                                                    </Box>
+                                                ))}
                                             </Box>
-                                        ))}
-                                    </Box>
-                                </Box>
-                            )}
-                        </AccordionDetails>
-                    </Accordion>
+                                        </Box>
+                                    )}
+                                </AccordionDetails>
+                            </Accordion>
 
-                    <Accordion expanded={expandedAccordion === 'state'} onChange={() => setExpandedAccordion(expandedAccordion === 'state' ? null : 'state')}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                            <Typography variant="h6">Create State</Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            <FormControl fullWidth margin="normal" error={!!validationErrors.country}>
-                                <InputLabel>Select Country</InputLabel>
-                                <Select
-                                    value={selectedCountryState || ''}
-                                    onChange={(e) => handleCountryChangeForState(e.target.value)}
-                                    label="Select Country"
+                            <Accordion expanded={expandedAccordion === 'state'} onChange={() => setExpandedAccordion(expandedAccordion === 'state' ? null : 'state')}>
+                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                    <Typography sx={{ borderRadius: 0, fontSize: '1rem' }} variant="h6">Create State</Typography>
+                                </AccordionSummary>
+                                <AccordionDetails>
+                                    <FormControl fullWidth margin="normal" error={!!validationErrors.country}>
+                                        <InputLabel>Select Country</InputLabel>
+                                        <Select
+                                            value={selectedCountryState || ''}
+                                            onChange={(e) => handleCountryChangeForState(e.target.value)}
+                                            label="Select Country"
+                                        >
+                                            <MenuItem value="">
+                                                <em>None</em>
+                                            </MenuItem>
+                                            {countries.map((country) => (
+                                                <MenuItem key={country.id} value={country.id}>
+                                                    {country.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                        {validationErrors.country && (
+                                            <Typography variant="caption" color="error">
+                                                {validationErrors.country}
+                                            </Typography>
+                                        )}
+                                    </FormControl>
+                                    <TextField
+                                        fullWidth
+                                        label="State Name"
+                                        value={stateName}
+                                        onChange={(e) => setStateName(e.target.value)}
+                                        margin="normal"
+                                        error={!!validationErrors.stateName}
+                                        helperText={validationErrors.stateName}
+                                    />
+                                    <Button variant="contained" onClick={createState} sx={{ mt: 2 }} disabled={!selectedCountryState}>
+                                        Submit
+                                    </Button>
+
+                                    {selectedCountryState && (
+                                        <Box sx={{ mt: 4 }}>
+                                            <Typography sx={{  fontSize: '1rem' }} variant="h6" gutterBottom>
+                                                States in Selected Country
+                                            </Typography>
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    flexWrap: 'wrap',
+                                                    gap: 1,
+                                                }}
+                                            >
+                                                {states.length > 0 ? (
+                                                    states.sort((a, b) => a.name.localeCompare(b.name)).map((state) => (
+                                                        <Box
+                                                            key={state.id}
+                                                            sx={{
+                                                                border: '1px solid #ccc',
+                                                                borderRadius: 10,
+                                                                paddingLeft: 1,
+                                                                paddingRight: 1,
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                                            }}
+                                                        >
+                                                            <Typography sx={{ marginRight: 1 }}>{state.name}</Typography>
+                                                            <IconButton
+                                                                onClick={() => handleDeleteState(state.name)}
+                                                                size="small"
+                                                                color="error"
+                                                            >
+                                                                <CloseIcon />
+                                                            </IconButton>
+                                                        </Box>
+                                                    ))
+                                                ) : (
+                                                    <Typography>No states available for this country</Typography>
+                                                )}
+                                            </Box>
+                                        </Box>
+                                    )}
+                                </AccordionDetails>
+                            </Accordion>
+
+                            <Accordion
+                                expanded={expandedAccordion === 'city'}
+                                onChange={() =>
+                                    setExpandedAccordion(expandedAccordion === 'city' ? null : 'city')
+                                }
+                            >
+                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                    <Typography sx={{ borderRadius: 0, fontSize: '1rem' }} variant="h6">Create District</Typography>
+                                </AccordionSummary>
+                                <AccordionDetails>
+                                    <FormControl fullWidth margin="normal">
+                                        <InputLabel>Select Country</InputLabel>
+                                        <Select
+                                            value={selectedCountryCity || ''}
+                                            onChange={(e) => handleCountryChangeForCity(e.target.value)}
+                                            label="Select Country"
+                                        >
+                                            <MenuItem value="">
+                                                <em>None</em>
+                                            </MenuItem>
+                                            {countries.map((country) => (
+                                                <MenuItem key={country.id} value={country.id}>
+                                                    {country.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+
+                                    <FormControl fullWidth margin="normal" error={!!validationErrors.state}>
+                                        <InputLabel>Select State</InputLabel>
+                                        <Select
+                                            value={selectedState || ''}
+                                            onChange={(e) => handleStateChange(e.target.value)}
+                                            label="Select State"
+                                        >
+                                            <MenuItem value="">
+                                                <em>None</em>
+                                            </MenuItem>
+                                            {states.map((state) => (
+                                                <MenuItem key={state.id} value={state.id}>
+                                                    {state.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                        {validationErrors.state && (
+                                            <Typography variant="caption" color="error">
+                                                {validationErrors.state}
+                                            </Typography>
+                                        )}
+                                    </FormControl>
+
+                                    <TextField
+                                        fullWidth
+                                        label="District Name"
+                                        value={cityName}
+                                        onChange={(e) => setCityName(e.target.value)}
+                                        margin="normal"
+                                        error={!!validationErrors.cityName}
+                                        helperText={validationErrors.cityName}
+                                    />
+                                    <Button variant="contained" onClick={createCity} sx={{ mt: 2 }}>
+                                        Submit
+                                    </Button>
+
+                                    {selectedState && (
+                                        <Box sx={{ mt: 4 }}>
+                                            <Typography sx={{  fontSize: '1rem' }} variant="h6" gutterBottom>
+                                                Districts in Selected State
+                                            </Typography>
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    flexWrap: 'wrap',
+                                                    gap: 1,
+                                                }}
+                                            >
+                                                {cities.length > 0 ? (
+                                                    cities.sort((a, b) => a.name.localeCompare(b.name)).map((city) => (
+                                                        <Box
+                                                            key={city.id}
+                                                            sx={{
+                                                                border: '1px solid #ccc',
+                                                                borderRadius: 10,
+                                                                paddingLeft: 1,
+                                                                paddingRight: 1,
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                                            }}
+                                                        >
+                                                            <Typography sx={{ marginRight: 1 }}>{city.name}</Typography>
+                                                            <IconButton
+                                                                onClick={() => handleDeleteCity(city.name)}
+                                                                size="small"
+                                                                color="error"
+                                                            >
+                                                                <CloseIcon />
+                                                            </IconButton>
+                                                        </Box>
+                                                    ))
+                                                ) : (
+                                                    <Typography>No districts available for this state</Typography>
+                                                )}
+                                            </Box>
+                                        </Box>
+                                    )}
+                                </AccordionDetails>
+                            </Accordion>
+
+                            <Accordion expanded={expandedAccordion === 'mandal'} onChange={() => setExpandedAccordion(expandedAccordion === 'mandal' ? null : 'mandal')}>
+                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                    <Typography sx={{ borderRadius: 0, fontSize: '1rem' }} variant="h6">Create Mandal</Typography>
+                                </AccordionSummary>
+                                <AccordionDetails>
+                                    <FormControl fullWidth margin="normal">
+                                        <InputLabel>Select Country</InputLabel>
+                                        <Select
+                                            value={selectedCountryCity || ''}
+                                            onChange={(e) => handleCountryChangeForCity(e.target.value)}
+                                            label="Select Country"
+                                        >
+                                            <MenuItem value="">
+                                                <em>None</em>
+                                            </MenuItem>
+                                            {countries.map((country) => (
+                                                <MenuItem key={country.id} value={country.id}>
+                                                    {country.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+
+                                    <FormControl fullWidth margin="normal" error={!!validationErrors.state}>
+                                        <InputLabel>Select State</InputLabel>
+                                        <Select
+                                            value={selectedState || ''}
+                                            onChange={(e) => handleStateChange(e.target.value)}
+                                            label="Select State"
+                                        >
+                                            <MenuItem value="">
+                                                <em>None</em>
+                                            </MenuItem>
+                                            {states.map((state) => (
+                                                <MenuItem key={state.id} value={state.id}>
+                                                    {state.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                        {validationErrors.state && (
+                                            <Typography variant="caption" color="error">
+                                                {validationErrors.state}
+                                            </Typography>
+                                        )}
+                                    </FormControl>
+
+                                    <FormControl fullWidth margin="normal" error={!!validationErrors.city}>
+                                        <InputLabel>Select District</InputLabel>
+                                        <Select
+                                            value={selectedCity || ''}
+                                            onChange={(e) => {
+                                                handleCityChange(e.target.value);
+                                                setSelectedMandal(''); // Reset selected Mandal when city changes
+                                            }}
+                                            label="Select District"
+                                        >
+                                            <MenuItem value="">
+                                                <em>None</em>
+                                            </MenuItem>
+                                            {cities.map((city) => (
+                                                <MenuItem key={city.id} value={city.id}>
+                                                    {city.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                        {validationErrors.city && (
+                                            <Typography variant="caption" color="error">
+                                                {validationErrors.city}
+                                            </Typography>
+                                        )}
+                                    </FormControl>
+
+                                    <TextField
+                                        fullWidth
+                                        label="Mandal Name"
+                                        value={mandalName}
+                                        onChange={(e) => setMandalName(e.target.value)}
+                                        margin="normal"
+                                        error={!!validationErrors.mandalName}
+                                        helperText={validationErrors.mandalName}
+                                    />
+
+                                    <Button variant="contained" onClick={createMandal} sx={{ mt: 2 }}>
+                                        Submit
+                                    </Button>
+
+                                    {selectedCity && (
+                                        <Box sx={{ mt: 4 }}>
+                                            <Typography sx={{  fontSize: '1rem' }} variant="h6" gutterBottom>
+                                                Mandals in Selected District
+                                            </Typography>
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    flexWrap: 'wrap',
+                                                    gap: 1,
+                                                }}
+                                            >
+                                                {cityMandals.length > 0 ? (
+                                                    cityMandals.sort((a, b) => a.name.localeCompare(b.name)).map((mandal) => (
+                                                        <Box
+                                                            key={mandal._id}
+                                                            sx={{
+                                                                border: '1px solid #ccc',
+                                                                borderRadius: 10,
+                                                                paddingLeft: 1,
+                                                                paddingRight: 1,
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                                            }}
+                                                        >
+                                                            <Typography sx={{ marginRight: 1 }}>{mandal.name}</Typography>
+                                                            <IconButton
+                                                                onClick={() => handleDeleteMandal(mandal.name)}
+                                                                size="small"
+                                                                color="error"
+                                                            >
+                                                                <CloseIcon />
+                                                            </IconButton>
+                                                        </Box>
+                                                    ))
+                                                ) : (
+                                                    <Typography>No mandals available for this city</Typography>
+                                                )}
+                                            </Box>
+                                        </Box>
+                                    )}
+                                </AccordionDetails>
+                            </Accordion>
+                            <Accordion expanded={expandedAccordion === 'village'} onChange={() => setExpandedAccordion(expandedAccordion === 'village' ? null : 'village')} style={{ marginBottom: '100px' }}>
+                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                    <Typography sx={{ borderRadius: 0, fontSize: '1rem' }} variant="h6">Create Village</Typography>
+                                </AccordionSummary>
+                                <AccordionDetails>
+                                    <FormControl fullWidth margin="normal">
+                                        <InputLabel>Select Country</InputLabel>
+                                        <Select
+                                            value={selectedCountryCity || ''}
+                                            onChange={(e) => handleCountryChangeForCity(e.target.value)}
+                                            label="Select Country"
+                                        >
+                                            <MenuItem value="">
+                                                <em>None</em>
+                                            </MenuItem>
+                                            {countries.map((country) => (
+                                                <MenuItem key={country.id} value={country.id}>
+                                                    {country.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+
+                                    <FormControl fullWidth margin="normal">
+                                        <InputLabel>Select State</InputLabel>
+                                        <Select
+                                            value={selectedState || ''}
+                                            onChange={(e) => handleStateChange(e.target.value)}
+                                            label="Select State"
+                                        >
+                                            <MenuItem value="">
+                                                <em>None</em>
+                                            </MenuItem>
+                                            {states.map((state) => (
+                                                <MenuItem key={state.id} value={state.id}>
+                                                    {state.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+
+                                    <FormControl fullWidth margin="normal">
+                                        <InputLabel>Select District</InputLabel>
+                                        <Select
+                                            value={selectedCity || ''}
+                                            onChange={(e) => handleCityChange(e.target.value)}
+                                            label="Select District"
+                                        >
+                                            <MenuItem value="">
+                                                <em>None</em>
+                                            </MenuItem>
+                                            {cities.map((city) => (
+                                                <MenuItem key={city.id} value={city.id}>
+                                                    {city.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+
+                                    <FormControl fullWidth margin="normal">
+                                        <InputLabel>Select Mandal</InputLabel>
+                                        <Select
+                                            value={selectedMandal || ''}
+                                            onChange={(e) => handleMandalChange(e.target.value)}
+                                            label="Select Mandal"
+                                        >
+                                            <MenuItem value="">
+                                                <em>None</em>
+                                            </MenuItem>
+                                            {cityMandals.map((mandal) => (
+                                                <MenuItem key={mandal._id} value={mandal._id}>
+                                                    {mandal.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+
+                                    <TextField
+                                        fullWidth
+                                        label="Village Name"
+                                        value={villageName}
+                                        onChange={(e) => setVillageName(e.target.value)}
+                                        margin="normal"
+                                        error={!!validationErrors.villageName}
+                                        helperText={validationErrors.villageName}
+                                    />
+
+                                    <Button variant="contained" onClick={createVillage} sx={{ mt: 2 }}>
+                                        Submit
+                                    </Button>
+
+                                    {selectedCity && (
+                                        <Box sx={{ mt: 4 }}>
+                                            <Typography sx={{  fontSize: '1rem' }} variant="h6" gutterBottom>
+                                                Villages in Selected Mandal
+                                            </Typography>
+                                            <Box
+                                                sx={{
+                                                    display: 'flex',
+                                                    flexWrap: 'wrap',
+                                                    gap: 1,
+                                                }}
+                                            >
+                                                {cityVillages.length > 0 ? (
+                                                    cityVillages.sort((a, b) => a.name.localeCompare(b.name)).map((village) => (
+                                                        <Box
+                                                            key={village._id}
+                                                            sx={{
+                                                                border: '1px solid #ccc',
+                                                                borderRadius: 10,
+                                                                paddingLeft: 1,
+                                                                paddingRight: 1,
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                                                            }}
+                                                            aria-labelledby={`mandal-${village._id}`}
+                                                        >
+                                                            <Typography sx={{ marginRight: 1 }} id={`mandal-${village._id}`}>
+                                                                {village.name}
+                                                            </Typography>
+                                                            <IconButton
+                                                                onClick={() => handleDeleteVillage(village.name)}
+                                                                size="small"
+                                                                color="error"
+                                                                aria-label={`Delete mandal ${village.name}`}
+                                                            >
+                                                                <CloseIcon />
+                                                            </IconButton>
+                                                        </Box>
+                                                    ))
+                                                ) : (
+                                                    <Typography>No Village available for this mandal</Typography>
+                                                )}
+                                            </Box>
+                                        </Box>
+                                    )}
+
+                                </AccordionDetails>
+                            </Accordion>
+                        </Box>
+                    </div>}
+                    {value === 1 &&
+                        <div style={{ display: 'flex', gap: 10 }}>
+
+                            <Box sx={{
+                                ...boxStyles,
+                                flexDirection: 'column',
+                                justifyContent: 'center',
+                                border: '0px ',
+                                backgroundColor: 'none',
+                            }}>
+                                <Typography  variant="h6" gutterBottom>
+                                    Download Excel Template
+                                </Typography>
+                                <Button 
+                                    variant="contained" 
+                                    startIcon={<CloudDownloadIcon />} 
+                                    onClick={handleDownloadTemplate}
                                 >
-                                    <MenuItem value="">
-                                        <em>None</em>
-                                    </MenuItem>
-                                    {countries.map((country) => (
-                                        <MenuItem key={country.id} value={country.id}>
-                                            {country.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                                {validationErrors.country && (
-                                    <Typography variant="caption" color="error">
-                                        {validationErrors.country}
-                                    </Typography>
-                                )}
-                            </FormControl>
-                            <TextField
-                                fullWidth
-                                label="State Name"
-                                value={stateName}
-                                onChange={(e) => setStateName(e.target.value)}
-                                margin="normal"
-                                error={!!validationErrors.stateName}
-                                helperText={validationErrors.stateName}
-                            />
-                            <Button variant="contained" onClick={createState} sx={{ mt: 2 }} disabled={!selectedCountryState}>
-                                Submit
-                            </Button>
+                                    Download
+                                </Button>
+                            </Box>
+                            <Box
+                                sx={{
+                                    ...boxStyles,
+                                    flexDirection: 'column',
+                                    '&.dragover': {
+                                        backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                                        borderColor: 'primary.main',
+                                    }
+                                }}
+                                // drag and drop function --- start
 
-                            {selectedCountryState && (
-                                <Box sx={{ mt: 4 }}>
-                                    <Typography variant="h6" gutterBottom>
-                                        States in Selected Country
-                                    </Typography>
+                                // onDragOver={(e) => {
+                                //     e.preventDefault();
+                                //     e.stopPropagation();
+                                //     e.currentTarget.classList.add('dragover');
+                                // }}
+                                // onDragLeave={(e) => {
+                                //     e.preventDefault();
+                                //     e.stopPropagation();
+                                //     e.currentTarget.classList.remove('dragover');
+                                // }}
+                                // onDrop={(e) => {
+                                //     e.preventDefault();
+                                //     e.stopPropagation();
+                                //     e.currentTarget.classList.remove('dragover');
+                                    
+                                //     const files = e.dataTransfer.files;
+                                //     if (files.length > 0) {
+                                //         const file = files[0];
+                                //         if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                                //             const input = document.getElementById('raised-button-file');
+                                //             input.files = files;
+                                //             handleFileUpload({ target: input });
+                                //         } else {
+                                //             alert('Please upload only Excel files (.xlsx or .xls)');
+                                //         }
+                                //     }
+                                // }}
+                                // drag and drop function -------- end
+
+                            >
+                                <Typography variant="h6" gutterBottom>
+                                    Upload Excel File
+                                </Typography>
+                                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                    <input
+                                        accept=".xlsx, .xls"
+                                        style={{ display: 'none' }}
+                                        id="raised-button-file"
+                                        multiple
+                                        type="file"
+                                        onChange={handleFileUpload}
+                                    />
+                                    <label htmlFor="raised-button-file">
+                                        <Button
+                                            variant="contained"
+                                            component="span"
+                                            startIcon={<CloudUploadIcon />}
+                                        >
+                                            Select File
+                                        </Button>
+                                    </label>
+
+                                </Box>
+                                {fileLoading ? (
                                     <Box
                                         sx={{
                                             display: 'flex',
-                                            flexWrap: 'wrap',
-                                            gap: 1,
+                                            justifyContent: 'center',
+                                            width: '100%',
+                                            my: 2
                                         }}
                                     >
-                                        {states.length > 0 ? (
-                                            states.sort((a, b) => a.name.localeCompare(b.name)).map((state) => (
-                                                <Box
-                                                    key={state.id}
-                                                    sx={{
-                                                        border: '1px solid #ccc',
-                                                        borderRadius: 10,
-                                                        paddingLeft: 1,
-                                                        paddingRight: 1,
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                                                    }}
-                                                >
-                                                    <Typography sx={{ marginRight: 1 }}>{state.name}</Typography>
-                                                    <IconButton
-                                                        onClick={() => handleDeleteState(state.name)}
-                                                        size="small"
-                                                        color="error"
-                                                    >
-                                                        <CloseIcon />
-                                                    </IconButton>
-                                                </Box>
-                                            ))
-                                        ) : (
-                                            <Typography>No states available for this country</Typography>
-                                        )}
+                                        <CircularProgress size={40} />
                                     </Box>
-                                </Box>
-                            )}
-                        </AccordionDetails>
-                    </Accordion>
-
-                    <Accordion
-                        expanded={expandedAccordion === 'city'}
-                        onChange={() =>
-                            setExpandedAccordion(expandedAccordion === 'city' ? null : 'city')
-                        }
-                    >
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                            <Typography variant="h6">Create District</Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            <FormControl fullWidth margin="normal">
-                                <InputLabel>Select Country</InputLabel>
-                                <Select
-                                    value={selectedCountryCity || ''}
-                                    onChange={(e) => handleCountryChangeForCity(e.target.value)}
-                                    label="Select Country"
-                                >
-                                    <MenuItem value="">
-                                        <em>None</em>
-                                    </MenuItem>
-                                    {countries.map((country) => (
-                                        <MenuItem key={country.id} value={country.id}>
-                                            {country.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-
-                            <FormControl fullWidth margin="normal" error={!!validationErrors.state}>
-                                <InputLabel>Select State</InputLabel>
-                                <Select
-                                    value={selectedState || ''}
-                                    onChange={(e) => handleStateChange(e.target.value)}
-                                    label="Select State"
-                                >
-                                    <MenuItem value="">
-                                        <em>None</em>
-                                    </MenuItem>
-                                    {states.map((state) => (
-                                        <MenuItem key={state.id} value={state.id}>
-                                            {state.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                                {validationErrors.state && (
-                                    <Typography variant="caption" color="error">
-                                        {validationErrors.state}
-                                    </Typography>
+                                ) : (
+                                    selectedFileName && (
+                                        <Typography variant="body2" color="text.secondary">
+                                            Selected: {selectedFileName}
+                                        </Typography>
+                                    )
                                 )}
-                            </FormControl>
+                            </Box>
 
-                            <TextField
-                                fullWidth
-                                label="District Name"
-                                value={cityName}
-                                onChange={(e) => setCityName(e.target.value)}
-                                margin="normal"
-                                error={!!validationErrors.cityName}
-                                helperText={validationErrors.cityName}
-                            />
-                            <Button variant="contained" onClick={createCity} sx={{ mt: 2 }}>
-                                Submit
-                            </Button>
 
-                            {selectedState && (
-                                <Box sx={{ mt: 4 }}>
-                                    <Typography variant="h6" gutterBottom>
-                                        Districts in Selected State
-                                    </Typography>
-                                    <Box
-                                        sx={{
-                                            display: 'flex',
-                                            flexWrap: 'wrap',
-                                            gap: 1,
-                                        }}
-                                    >
-                                        {cities.length > 0 ? (
-                                            cities.sort((a, b) => a.name.localeCompare(b.name)).map((city) => (
-                                                <Box
-                                                    key={city.id}
-                                                    sx={{
-                                                        border: '1px solid #ccc',
-                                                        borderRadius: 10,
-                                                        paddingLeft: 1,
-                                                        paddingRight: 1,
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                                                    }}
-                                                >
-                                                    <Typography sx={{ marginRight: 1 }}>{city.name}</Typography>
-                                                    <IconButton
-                                                        onClick={() => handleDeleteCity(city.name)}
-                                                        size="small"
-                                                        color="error"
-                                                    >
-                                                        <CloseIcon />
-                                                    </IconButton>
-                                                </Box>
-                                            ))
-                                        ) : (
-                                            <Typography>No districts available for this state</Typography>
-                                        )}
-                                    </Box>
-                                </Box>
-                            )}
-                        </AccordionDetails>
-                    </Accordion>
+                        </div>
 
-                    <Accordion expanded={expandedAccordion === 'mandal'} onChange={() => setExpandedAccordion(expandedAccordion === 'mandal' ? null : 'mandal')}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                            <Typography variant="h6">Create Mandal</Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            <FormControl fullWidth margin="normal">
-                                <InputLabel>Select Country</InputLabel>
-                                <Select
-                                    value={selectedCountryCity || ''}
-                                    onChange={(e) => handleCountryChangeForCity(e.target.value)}
-                                    label="Select Country"
-                                >
-                                    <MenuItem value="">
-                                        <em>None</em>
-                                    </MenuItem>
-                                    {countries.map((country) => (
-                                        <MenuItem key={country.id} value={country.id}>
-                                            {country.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                    }
 
-                            <FormControl fullWidth margin="normal" error={!!validationErrors.state}>
-                                <InputLabel>Select State</InputLabel>
-                                <Select
-                                    value={selectedState || ''}
-                                    onChange={(e) => handleStateChange(e.target.value)}
-                                    label="Select State"
-                                >
-                                    <MenuItem value="">
-                                        <em>None</em>
-                                    </MenuItem>
-                                    {states.map((state) => (
-                                        <MenuItem key={state.id} value={state.id}>
-                                            {state.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                                {validationErrors.state && (
-                                    <Typography variant="caption" color="error">
-                                        {validationErrors.state}
-                                    </Typography>
-                                )}
-                            </FormControl>
-
-                            <FormControl fullWidth margin="normal" error={!!validationErrors.city}>
-                                <InputLabel>Select District</InputLabel>
-                                <Select
-                                    value={selectedCity || ''}
-                                    onChange={(e) => {
-                                        handleCityChange(e.target.value);
-                                        setSelectedMandal(''); // Reset selected Mandal when city changes
-                                    }}
-                                    label="Select District"
-                                >
-                                    <MenuItem value="">
-                                        <em>None</em>
-                                    </MenuItem>
-                                    {cities.map((city) => (
-                                        <MenuItem key={city.id} value={city.id}>
-                                            {city.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                                {validationErrors.city && (
-                                    <Typography variant="caption" color="error">
-                                        {validationErrors.city}
-                                    </Typography>
-                                )}
-                            </FormControl>
-
-                            <TextField
-                                fullWidth
-                                label="Mandal Name"
-                                value={mandalName}
-                                onChange={(e) => setMandalName(e.target.value)}
-                                margin="normal"
-                                error={!!validationErrors.mandalName}
-                                helperText={validationErrors.mandalName}
-                            />
-
-                            <Button variant="contained" onClick={createMandal} sx={{ mt: 2 }}>
-                                Submit
-                            </Button>
-
-                            {selectedCity && (
-                                <Box sx={{ mt: 4 }}>
-                                    <Typography variant="h6" gutterBottom>
-                                        Mandals in Selected District
-                                    </Typography>
-                                    <Box
-                                        sx={{
-                                            display: 'flex',
-                                            flexWrap: 'wrap',
-                                            gap: 1,
-                                        }}
-                                    >
-                                        {cityMandals.length > 0 ? (
-                                            cityMandals.sort((a, b) => a.name.localeCompare(b.name)).map((mandal) => (
-                                                <Box
-                                                    key={mandal._id}
-                                                    sx={{
-                                                        border: '1px solid #ccc',
-                                                        borderRadius: 10,
-                                                        paddingLeft: 1,
-                                                        paddingRight: 1,
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                                                    }}
-                                                >
-                                                    <Typography sx={{ marginRight: 1 }}>{mandal.name}</Typography>
-                                                    <IconButton
-                                                        onClick={() => handleDeleteMandal(mandal.name)}
-                                                        size="small"
-                                                        color="error"
-                                                    >
-                                                        <CloseIcon />
-                                                    </IconButton>
-                                                </Box>
-                                            ))
-                                        ) : (
-                                            <Typography>No mandals available for this city</Typography>
-                                        )}
-                                    </Box>
-                                </Box>
-                            )}
-                        </AccordionDetails>
-                    </Accordion>
-                    <Accordion expanded={expandedAccordion === 'village'} onChange={() => setExpandedAccordion(expandedAccordion === 'village' ? null : 'village')} style={{ marginBottom: '100px' }}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                            <Typography variant="h6">Create Village</Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            <FormControl fullWidth margin="normal">
-                                <InputLabel>Select Country</InputLabel>
-                                <Select
-                                    value={selectedCountryCity || ''}
-                                    onChange={(e) => handleCountryChangeForCity(e.target.value)}
-                                    label="Select Country"
-                                >
-                                    <MenuItem value="">
-                                        <em>None</em>
-                                    </MenuItem>
-                                    {countries.map((country) => (
-                                        <MenuItem key={country.id} value={country.id}>
-                                            {country.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-
-                            <FormControl fullWidth margin="normal">
-                                <InputLabel>Select State</InputLabel>
-                                <Select
-                                    value={selectedState || ''}
-                                    onChange={(e) => handleStateChange(e.target.value)}
-                                    label="Select State"
-                                >
-                                    <MenuItem value="">
-                                        <em>None</em>
-                                    </MenuItem>
-                                    {states.map((state) => (
-                                        <MenuItem key={state.id} value={state.id}>
-                                            {state.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-
-                            <FormControl fullWidth margin="normal">
-                                <InputLabel>Select District</InputLabel>
-                                <Select
-                                    value={selectedCity || ''}
-                                    onChange={(e) => handleCityChange(e.target.value)}
-                                    label="Select District"
-                                >
-                                    <MenuItem value="">
-                                        <em>None</em>
-                                    </MenuItem>
-                                    {cities.map((city) => (
-                                        <MenuItem key={city.id} value={city.id}>
-                                            {city.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-
-                            <FormControl fullWidth margin="normal">
-                                <InputLabel>Select Mandal</InputLabel>
-                                <Select
-                                    value={selectedMandal || ''}
-                                    onChange={(e) => handleMandalChange(e.target.value)}
-                                    label="Select Mandal"
-                                >
-                                    <MenuItem value="">
-                                        <em>None</em>
-                                    </MenuItem>
-                                    {cityMandals.map((mandal) => (
-                                        <MenuItem key={mandal._id} value={mandal._id}>
-                                            {mandal.name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-
-                            <TextField
-                                fullWidth
-                                label="Village Name"
-                                value={villageName}
-                                onChange={(e) => setVillageName(e.target.value)}
-                                margin="normal"
-                                error={!!validationErrors.villageName}
-                                helperText={validationErrors.villageName}
-                            />
-
-                            <Button variant="contained" onClick={createVillage} sx={{ mt: 2 }}>
-                                Submit
-                            </Button>
-
-                            {selectedCity && (
-                                <Box sx={{ mt: 4 }}>
-                                    <Typography variant="h6" gutterBottom>
-                                        Villages in Selected Mandal
-                                    </Typography>
-                                    <Box
-                                        sx={{
-                                            display: 'flex',
-                                            flexWrap: 'wrap',
-                                            gap: 1,
-                                        }}
-                                    >
-                                        {cityVillages.length > 0 ? (
-                                            cityVillages.sort((a, b) => a.name.localeCompare(b.name)).map((village) => (
-                                                <Box
-                                                    key={village._id}
-                                                    sx={{
-                                                        border: '1px solid #ccc',
-                                                        borderRadius: 10,
-                                                        paddingLeft: 1,
-                                                        paddingRight: 1,
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                                                    }}
-                                                    aria-labelledby={`mandal-${village._id}`}
-                                                >
-                                                    <Typography sx={{ marginRight: 1 }} id={`mandal-${village._id}`}>
-                                                        {village.name}
-                                                    </Typography>
-                                                    <IconButton
-                                                        onClick={() => handleDeleteVillage(village.name)}
-                                                        size="small"
-                                                        color="error"
-                                                        aria-label={`Delete mandal ${village.name}`}
-                                                    >
-                                                        <CloseIcon />
-                                                    </IconButton>
-                                                </Box>
-                                            ))
-                                        ) : (
-                                            <Typography>No Village available for this mandal</Typography>
-                                        )}
-                                    </Box>
-                                </Box>
-                            )}
-
-                        </AccordionDetails>
-                    </Accordion>
                 </Box>
-                </div>
-                <div>
-                    test tab
-                </div>
+            </Box>
 
-                
+
             <FooterComp />
             <ToastContainer position="top-right" autoClose={1000} />
             <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
                 <DialogTitle>Delete Country</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                    Are you sure you want to delete the country &quot;{countryToDelete}&quot;?
+                        Are you sure you want to delete the country &quot;{countryToDelete}&quot;?
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
@@ -1150,7 +1405,7 @@ const LocationComponent = () => {
                 <DialogTitle>Delete State</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                    Are you sure you want to delete state &quot;{stateToDelete}&quot;?
+                        Are you sure you want to delete state &quot;{stateToDelete}&quot;?
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
@@ -1166,7 +1421,7 @@ const LocationComponent = () => {
                 <DialogTitle>Delete City</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                    Are you sure you want to delete the city &quot;{cityToDelete}&quot;?
+                        Are you sure you want to delete the city &quot;{cityToDelete}&quot;?
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
@@ -1180,7 +1435,7 @@ const LocationComponent = () => {
                 <DialogTitle>Delete Mandal</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                    Are you sure you want to delete the mandal &quot;{mandalToDelete}&quot;?
+                        Are you sure you want to delete the mandal &quot;{mandalToDelete}&quot;?
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
@@ -1194,7 +1449,7 @@ const LocationComponent = () => {
                 <DialogTitle>Delete Village</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                    Are you sure you want to delete the village &quot;{villageToDelete}&quot;?
+                        Are you sure you want to delete the village &quot;{villageToDelete}&quot;?
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>

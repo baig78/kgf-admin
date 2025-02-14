@@ -180,3 +180,7 @@
     }
   }
 }
+
+.css-13ickou-MuiPaper-root-MuiAccordion-root:first-of-type{
+  border-radius: 0px !important;
+}
