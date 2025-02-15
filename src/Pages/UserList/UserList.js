@@ -15,6 +15,25 @@ import CardFront from '../IDCard/IDCard';
 import { toast } from 'react-toastify';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
+
+// Register the scales and other necessary chart components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 export default function UserList() {
     const [data, setData] = useState([]);
@@ -85,31 +104,31 @@ export default function UserList() {
         const dataToExport = filteredRows.length > 0 ? filteredRows : processedData;
 
         const formattedData = dataToExport.map((item, index) => ({
-          'Serial No.': index + 1, 
-          'ID': item.id,
-          'Surname': item.surname,
-          'Name': item.name,
-          'Gothram': item.gothram,
-          'Mobile': item.mobile,
-          'DOB': item.dob,
-          'Gender': item.gender,
-          'ResidentType': item.residentType,
-          'State': item.state,
-          'City': item.city,
-          'Country': item.country,
-          'Address': item.address,
+            'Serial No.': index + 1,
+            'ID': item.id,
+            'Surname': item.surname,
+            'Name': item.name,
+            'Gothram': item.gothram,
+            'Mobile': item.mobile,
+            'DOB': item.dob,
+            'Gender': item.gender,
+            'ResidentType': item.residentType,
+            'State': item.state,
+            'City': item.city,
+            'Country': item.country,
+            'Address': item.address,
         }));
 
         const worksheet = XLSX.utils.json_to_sheet(formattedData);
-        
+
         // Auto-adjust column widths and add center alignment for Serial No.
         const columnWidths = formattedData.reduce((widths, row) => {
-          Object.keys(row).forEach((key, index) => {
-            const cellValue = row[key] ? String(row[key]) : '';
-            const cellLength = cellValue.length;
-            widths[index] = Math.max(widths[index] || 0, cellLength, key.length);
-          });
-          return widths;
+            Object.keys(row).forEach((key, index) => {
+                const cellValue = row[key] ? String(row[key]) : '';
+                const cellLength = cellValue.length;
+                widths[index] = Math.max(widths[index] || 0, cellLength, key.length);
+            });
+            return widths;
         }, []);
 
         worksheet['!cols'] = columnWidths.map(width => ({ wch: width + 2 })); // Add 2 for padding
@@ -118,14 +137,14 @@ export default function UserList() {
         if (!worksheet['!ref']) return;
         const range = XLSX.utils.decode_range(worksheet['!ref']);
         for (let row = range.s.r + 1; row <= range.e.r; row++) {
-          const cellAddress = XLSX.utils.encode_cell({c: 0, r: row});
-          if (worksheet[cellAddress]) {
-            worksheet[cellAddress].s = {
-              alignment: {
-                horizontal: 'center'
-              }
-            };
-          }
+            const cellAddress = XLSX.utils.encode_cell({ c: 0, r: row });
+            if (worksheet[cellAddress]) {
+                worksheet[cellAddress].s = {
+                    alignment: {
+                        horizontal: 'center'
+                    }
+                };
+            }
         }
 
         const workbook = XLSX.utils.book_new();
@@ -142,11 +161,11 @@ export default function UserList() {
         }
 
         try {
-            const result = await userService.downloadUserPdf(userId, { 
-                preview: !download, 
-                download 
+            const result = await userService.downloadUserPdf(userId, {
+                preview: !download,
+                download
             });
-            
+
             if (result) {
                 console.log("PDF processed successfully");
             }
@@ -207,8 +226,8 @@ export default function UserList() {
 
             // Table headers matching the exact user object
             const headers = [
-                'S.No', 'surname', 'name', 'gothram', 'mobile', 
-                'dob', 'gender', 'residentType', 'state', 
+                'S.No', 'surname', 'name', 'gothram', 'mobile',
+                'dob', 'gender', 'residentType', 'state',
                 'country', 'memberShip', 'createdAt'
             ];
 
@@ -234,12 +253,12 @@ export default function UserList() {
                 head: [headers],
                 body: tableData,
                 theme: 'striped',
-                styles: { 
+                styles: {
                     fontSize: 8,
                     cellPadding: 3,
                     overflow: 'linebreak'
                 },
-                columnStyles: { 
+                columnStyles: {
                     0: { cellWidth: 40 },   // S.No column
                     1: { cellWidth: 60 },   // surname column
                     2: { cellWidth: 60 }    // name column
@@ -296,24 +315,12 @@ export default function UserList() {
             headerName: 'Actions',
             width: 130,
             getActions: (params) => [
-                // <GridActionsCellItem
-                //     key={`view-${params.row.id}`}
-                //     icon={<ViewIcon />}
-                //     label="View ID Card"
-                //     onClick={() => handleViewCard(params.row)}
-                // />,
                 <GridActionsCellItem
                     key={`download-${params.row.id}`}
                     icon={<DownloadIcon />}
                     label="Download ID Card"
                     onClick={() => handleDownloadPdf(params.row.id, true)}
                 />,
-                // <GridActionsCellItem
-                //     key={`preview-${params.row.id}`}
-                //     icon={<PictureAsPdfIcon />}
-                //     label="Preview ID Card"
-                //     onClick={() => handleDownloadPdf(params.row.id)}
-                // />
             ]
         },
     ];
@@ -323,40 +330,40 @@ export default function UserList() {
         const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
         return (
-            <GridToolbarContainer 
-                sx={{ 
-                    justifyContent: 'flex-end', 
-                    flexWrap: 'nowrap', 
-                    overflowX: 'auto', 
+            <GridToolbarContainer
+                sx={{
+                    justifyContent: 'flex-end',
+                    flexWrap: 'nowrap',
+                    overflowX: 'auto',
                     padding: '0 10px',
                     gap: 1 // Add small gap between items
                 }}
             >
                 <GridToolbarFilterButton />
-                <GridToolbarQuickFilter 
-                    sx={{ 
-                        minWidth: isMobile ? 100 : 'auto', 
-                        flexGrow: isMobile ? 1 : 0 
-                    }} 
+                <GridToolbarQuickFilter
+                    sx={{
+                        minWidth: isMobile ? 100 : 'auto',
+                        flexGrow: isMobile ? 1 : 0
+                    }}
                 />
                 <Button
                     variant="text"
                     onClick={exportToExcel}
                     startIcon={<DownloadIcon />}
-                    sx={{ 
-                        mr: 1, 
+                    sx={{
+                        mr: 1,
                         minWidth: isMobile ? 'auto' : undefined,
                         padding: isMobile ? '6px 8px' : undefined
                     }}
                 >
                     {!isMobile && 'Export Excel'}
                 </Button>
-              
-                <Button 
-                    startIcon={<PictureAsPdfIcon />} 
+
+                <Button
+                    startIcon={<PictureAsPdfIcon />}
                     onClick={createAlignedPDFWithUserData}
                 >
-                                        {!isMobile && 'Export PDF'}
+                    {!isMobile && 'Export PDF'}
 
                 </Button>
             </GridToolbarContainer>

@@ -3,7 +3,7 @@ import Navbar from "../../Components/Navbar/Navbar";
 import FooterComp from "../../Components/FooterComp/FooterComp";
 import './Location.css';
 import { addressService } from '../../service';
-import { Button,  Typography, TextField, Select, MenuItem, FormControl, InputLabel, Box, Accordion, AccordionSummary, AccordionDetails, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Tabs, Tab } from '@mui/material';
+import { Button, Typography, TextField, Select, MenuItem, FormControl, InputLabel, Box, Accordion, AccordionSummary, AccordionDetails, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Tabs, Tab } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -11,7 +11,17 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import * as XLSX from "xlsx";
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+const Geocode = require('react-geocode');
 
+// Ensure proper initialization of Geocode
+if (Geocode && Geocode.default) {
+    // Set Google Maps API key (replace with your actual API key)
+    Geocode.default.setApiKey("YOUR_GOOGLE_MAPS_API_KEY");
+    Geocode.default.setLanguage("en");
+    Geocode.default.setRegion("in");
+} else {
+    console.error("Geocode is not properly imported or initialized");
+}
 
 const LocationComponent = () => {
     const [loading, setLoading] = useState(false);
@@ -47,6 +57,12 @@ const LocationComponent = () => {
     const [cityVillages, setCityVillages] = useState([]);
     const [fileLoading, setFileLoading] = useState(false);
     const [selectedFileName, setSelectedFileName] = useState(null);
+    const [fullAddress, setFullAddress] = useState({
+        state: '',
+        district: '',
+        village: '',
+        fullAddressString: ''
+    });
 
     const resetLocationForm = () => {
         setCountryName('');
@@ -701,6 +717,87 @@ const LocationComponent = () => {
         return result;
     };
 
+    useEffect(() => {
+        if (Geocode && Geocode.default) {
+            const GeocodeInstance = Geocode.default;
+            GeocodeInstance.setApiKey("YOUR_GOOGLE_MAPS_API_KEY");
+            GeocodeInstance.setLanguage("en");
+            GeocodeInstance.setRegion("in");
+        }
+    }, []);
+
+    const handleGetFullAddress = (lat, lng) => {
+        // Ensure we're using the correct Geocode instance
+        const GeocodeInstance = Geocode.default || Geocode;
+        
+        if (!GeocodeInstance || !GeocodeInstance.fromLatLng) {
+            console.error('Geocode is not properly initialized');
+            return;
+        }
+
+        GeocodeInstance.fromLatLng(lat, lng).then(
+            (response) => {
+                const address = response.results[0];
+                
+                // Extract specific address components
+                const addressComponents = address.address_components;
+                
+                const state = addressComponents.find(
+                    (component) => component.types.includes('administrative_area_level_1')
+                )?.long_name || '';
+                
+                const district = addressComponents.find(
+                    (component) => component.types.includes('administrative_area_level_2')
+                )?.long_name || '';
+                
+                const village = addressComponents.find(
+                    (component) => component.types.includes('locality')
+                )?.long_name || '';
+
+                setFullAddress({
+                    state,
+                    district,
+                    village,
+                    fullAddressString: address.formatted_address
+                });
+            },
+            (error) => {
+                console.error("Geocoding error:", error);
+                // Fallback to OpenStreetMap if Google Geocoding fails
+                handleFallbackGeocoding(lat, lng);
+            }
+        );
+    };
+
+    const handleFallbackGeocoding = (latitude, longitude) => {
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`)
+            .then(response => response.json())
+            .then(data => {
+                const address = data.address;
+                setFullAddress({
+                    state: address.state || address.province || '',
+                    district: address.county || '',
+                    village: address.village || address.town || address.city || '',
+                    fullAddressString: data.display_name
+                });
+            })
+            .catch(error => {
+                console.error("Error getting address details:", error);
+            });
+    };
+
+    const handleGetLocationDetails = () => {
+        // Assuming you want to use current location or a selected location
+        navigator.geolocation.getCurrentPosition((position) => {
+            const { latitude, longitude } = position.coords;
+            
+            // Call function to get full address
+            handleGetFullAddress(latitude, longitude);
+        }, (error) => {
+            console.error("Error getting location", error);
+        });
+    };
+
     const boxStyles = {
         display: 'flex',
         flexDirection: 'column',
@@ -1269,6 +1366,20 @@ const LocationComponent = () => {
 
                                 </AccordionDetails>
                             </Accordion>
+                            {/* <Button 
+                                variant="contained" 
+                                onClick={handleGetLocationDetails}
+                            >
+                                Get Location Details
+                            </Button>
+                            {fullAddress.fullAddressString && (
+                                <div>
+                                    <Typography>Full Address: {fullAddress.fullAddressString}</Typography>
+                                    <Typography>State: {fullAddress.state}</Typography>
+                                    <Typography>District: {fullAddress.district}</Typography>
+                                    <Typography>Village: {fullAddress.village}</Typography>
+                                </div>
+                            )} */}
                         </Box>
                     </div>}
                     {value === 1 &&
